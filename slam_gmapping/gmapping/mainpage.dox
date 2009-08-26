@@ -1,0 +1,11 @@
+/**
+
+@mainpage
+
+@htmlinclude manifest.html
+
+The gmapping package offers no code-level API.  All usage is intended to go
+through the command-line interface of the slam_gmapping node, which is
+documented in the wiki.
+
+*/

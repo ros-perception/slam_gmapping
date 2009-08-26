@@ -1,0 +1,337 @@
+diff -urN ../gmapping_export_orig/configfile/configfile.cpp ./configfile/configfile.cpp
+--- ../gmapping_export_orig/configfile/configfile.cpp	2007-09-07 01:56:13.000000000 -0700
++++ ./configfile/configfile.cpp	2008-11-13 09:30:16.138348566 -0800
+@@ -30,6 +30,7 @@
+ #include <sstream>
+ #include <iostream>
+ #include <ctype.h>
++#include <cstdlib>
+ 
+ namespace GMapping{
+ using namespace std;
+diff -urN ../gmapping_export_orig/configfile/configfile_test.cpp ./configfile/configfile_test.cpp
+--- ../gmapping_export_orig/configfile/configfile_test.cpp	2007-09-07 01:56:13.000000000 -0700
++++ ./configfile/configfile_test.cpp	2008-11-13 09:30:16.138348566 -0800
+@@ -23,6 +23,7 @@
+ 
+ 
+ #include <iostream>
++#include <cstdlib>
+ #include "configfile.h"
+ 
+ using namespace std;
+diff -urN ../gmapping_export_orig/gridfastslam/gfs2log.cpp ./gridfastslam/gfs2log.cpp
+--- ../gmapping_export_orig/gridfastslam/gfs2log.cpp	2007-01-15 03:28:18.000000000 -0800
++++ ./gridfastslam/gfs2log.cpp	2008-11-13 09:30:16.138348566 -0800
+@@ -3,6 +3,7 @@
+ #include <sstream>
+ #include <vector>
+ #include <list>
++#include <cstring>
+ #include <utils/point.h>
+ #include "gfsreader.h"
+ 
+@@ -12,7 +13,7 @@
+ using namespace GMapping;
+ using namespace GMapping::GFSReader;
+ 
+-int main (unsigned int argc, const char * const * argv){
++int main (int argc, const char * const * argv){
+ 	if (argc<3){
+ 		cout << "usage gfs2log [-err] [-neff] [-part] [-odom] <infilename> <outfilename>" << endl;
+ 		cout << "  -odom : dump raw odometry in ODOM message instead of inpolated corrected one" << endl;
+diff -urN ../gmapping_export_orig/gridfastslam/gfs2neff.cpp ./gridfastslam/gfs2neff.cpp
+--- ../gmapping_export_orig/gridfastslam/gfs2neff.cpp	2007-01-15 03:28:18.000000000 -0800
++++ ./gridfastslam/gfs2neff.cpp	2008-11-13 09:30:16.138348566 -0800
+@@ -4,7 +4,7 @@
+ 
+ using namespace std;
+ 
+-int main(unsigned int argc, const char* const *argv){
++int main(int argc, const char* const *argv){
+ 	if (argc<3){
+ 		cout << "usage gfs2neff <infilename> <nefffilename>" << endl;
+ 		return -1;
+diff -urN ../gmapping_export_orig/gridfastslam/gfs2rec.cpp ./gridfastslam/gfs2rec.cpp
+--- ../gmapping_export_orig/gridfastslam/gfs2rec.cpp	2007-01-15 03:28:18.000000000 -0800
++++ ./gridfastslam/gfs2rec.cpp	2008-11-13 09:30:16.145836961 -0800
+@@ -3,6 +3,7 @@
+ #include <sstream>
+ #include <vector>
+ #include <list>
++#include <cstring>
+ #include <utils/point.h>
+ 
+ #define MAX_LINE_LENGHT (1000000)
+@@ -368,7 +369,7 @@
+ 
+ 
+ 
+-int main (unsigned int argc, const char * const * argv){
++int main ( int argc, const char * const * argv){
+ 	if (argc<3){
+ 		cout << "usage gfs2rec [-err] <infilename> <outfilename>" << endl;
+ 		return -1;
+diff -urN ../gmapping_export_orig/gridfastslam/gfsreader.cpp ./gridfastslam/gfsreader.cpp
+--- ../gmapping_export_orig/gridfastslam/gfsreader.cpp	2008-07-09 03:25:13.000000000 -0700
++++ ./gridfastslam/gfsreader.cpp	2008-11-13 09:30:16.145836961 -0800
+@@ -1,6 +1,7 @@
+ #include "gfsreader.h"
+ #include <iomanip>
+ #include <limits>
++#include <cstring>
+ 
+ namespace  GMapping { 
+ 
+diff -urN ../gmapping_export_orig/gridfastslam/gridslamprocessor.cpp ./gridfastslam/gridslamprocessor.cpp
+--- ../gmapping_export_orig/gridfastslam/gridslamprocessor.cpp	2007-08-27 08:29:07.000000000 -0700
++++ ./gridfastslam/gridslamprocessor.cpp	2008-11-13 09:30:16.125742409 -0800
+@@ -402,6 +402,13 @@
+ 	plainReading[i]=reading[i];
+       }
+       m_infoStream << "m_count " << m_count << endl;
++
++      RangeReading* reading_copy = 
++              new RangeReading(reading.size(),
++                               &(reading[0]),
++                               static_cast<const RangeSensor*>(reading.getSensor()),
++                               reading.getTime());
++
+       if (m_count>0){
+ 	scanMatch(plainReading);
+ 	if (m_outputStream.is_open()){
+@@ -432,7 +439,7 @@
+ 	  m_outputStream << setiosflags(ios::fixed) << setprecision(6);
+ 	  m_outputStream << "NEFF " << m_neff << endl;
+ 	}
+-	resample(plainReading, adaptParticles);
++	resample(plainReading, adaptParticles, reading_copy);
+ 	
+       } else {
+ 	m_infoStream << "Registering First Scan"<< endl;
+@@ -443,9 +450,9 @@
+ 	  
+ 	  // cyr: not needed anymore, particles refer to the root in the beginning!
+ 	  TNode* node=new	TNode(it->pose, 0., it->node,  0);
+-	  node->reading=0;
++	  //node->reading=0;
++          node->reading = reading_copy;
+ 	  it->node=node;
+-	  
+ 	}
+       }
+       //		cerr  << "Tree: normalizing, resetting and propagating weights at the end..." ;
+diff -urN ../gmapping_export_orig/gridfastslam/gridslamprocessor.hxx ./gridfastslam/gridslamprocessor.hxx
+--- ../gmapping_export_orig/gridfastslam/gridslamprocessor.hxx	2007-08-27 08:29:07.000000000 -0700
++++ ./gridfastslam/gridslamprocessor.hxx	2008-11-13 09:30:16.125742409 -0800
+@@ -67,7 +67,7 @@
+   
+ }
+ 
+-inline bool GridSlamProcessor::resample(const double* plainReading, int adaptSize, const RangeReading* ){
++inline bool GridSlamProcessor::resample(const double* plainReading, int adaptSize, const RangeReading* reading){
+   
+   bool hasResampled = false;
+   
+@@ -112,7 +112,7 @@
+       TNode* oldNode=oldGeneration[m_indexes[i]];
+       //			cerr << i << "->" << m_indexes[i] << "B("<<oldNode->childs <<") ";
+       node=new	TNode(p.pose, 0, oldNode, 0);
+-      node->reading=0;
++      node->reading=reading;
+       //			cerr << "A("<<node->parent->childs <<") " <<endl;
+       
+       temp.push_back(p);
+@@ -155,7 +155,8 @@
+       TNode* node=0;
+       node=new TNode(it->pose, 0.0, *node_it, 0);
+       
+-      node->reading=0;
++      //node->reading=0;
++      node->reading=reading;
+       it->node=node;
+ 
+       //END: BUILDING TREE
+diff -urN ../gmapping_export_orig/gui/gfs2img.cpp ./gui/gfs2img.cpp
+--- ../gmapping_export_orig/gui/gfs2img.cpp	2008-06-08 03:40:20.000000000 -0700
++++ ./gui/gfs2img.cpp	2008-11-13 09:30:16.145836961 -0800
+@@ -1,4 +1,5 @@
+ #include <limits.h>
++#include <cstdlib>
+ #include <scanmatcher/scanmatcher.h>
+ #include <gridfastslam/gfsreader.h>
+ #include <qpixmap.h>
+diff -urN ../gmapping_export_orig/log/carmenconfiguration.cpp ./log/carmenconfiguration.cpp
+--- ../gmapping_export_orig/log/carmenconfiguration.cpp	2008-06-08 03:40:20.000000000 -0700
++++ ./log/carmenconfiguration.cpp	2008-11-13 09:30:16.145836961 -0800
+@@ -2,6 +2,7 @@
+ #include <iostream>
+ #include <sstream>
+ #include <assert.h>
++#include <cstdlib>
+ #include <sys/types.h>
+ #include <sensor_odometry/odometrysensor.h>
+ #include <sensor_range/rangesensor.h>
+diff -urN ../gmapping_export_orig/log/log_plot.cpp ./log/log_plot.cpp
+--- ../gmapping_export_orig/log/log_plot.cpp	2008-06-08 03:40:20.000000000 -0700
++++ ./log/log_plot.cpp	2008-11-13 09:30:16.159493409 -0800
+@@ -1,5 +1,6 @@
+ #include <fstream>
+ #include <iostream>
++#include <cstdlib>
+ #include <sys/types.h>
+ #include <log/carmenconfiguration.h>
+ #include <log/sensorlog.h>
+@@ -8,7 +9,7 @@
+ using namespace std;
+ using namespace GMapping;
+ 
+-int main(char argc, char ** argv){
++int main(int argc, char ** argv){
+   double maxrange=2.;
+ 	if (argc<2){
+ 		cout << "usage log_plot <filename> | gnuplot" << endl;
+diff -urN ../gmapping_export_orig/log/log_test.cpp ./log/log_test.cpp
+--- ../gmapping_export_orig/log/log_test.cpp	2007-01-15 03:28:18.000000000 -0800
++++ ./log/log_test.cpp	2008-11-13 09:30:16.145836961 -0800
+@@ -1,5 +1,6 @@
+ #include <fstream>
+ #include <iostream>
++#include <cstdlib>
+ #include <log/carmenconfiguration.h>
+ #include <log/sensorlog.h>
+ 
+@@ -7,7 +8,7 @@
+ using namespace std;
+ using namespace GMapping;
+ 
+-int main(char argc, char ** argv){
++int main(int argc, char ** argv){
+ 	if (argc<2){
+ 		cout << "usage log_test <filename>" << endl;
+ 		exit (-1);
+diff -urN ../gmapping_export_orig/log/rdk2carmen.cpp ./log/rdk2carmen.cpp
+--- ../gmapping_export_orig/log/rdk2carmen.cpp	2007-01-15 03:28:18.000000000 -0800
++++ ./log/rdk2carmen.cpp	2008-11-13 09:30:16.145836961 -0800
+@@ -1,5 +1,6 @@
+ #include <fstream>
+ #include <iostream>
++#include <cstdlib>
+ #include <log/carmenconfiguration.h>
+ #include <log/sensorlog.h>
+ 
+@@ -7,7 +8,7 @@
+ using namespace std;
+ using namespace GMapping;
+ 
+-int main(char argc, char ** argv){
++int main(int argc, char ** argv){
+ 	if (argc<2){
+ 		cerr << "usage "<<argv[0]<<" <filename> <outfilename>" << endl;
+ 		cerr << "or "<<argv[0]<<" <filename> for standard output" << endl;
+diff -urN ../gmapping_export_orig/log/scanstudio2carmen.cpp ./log/scanstudio2carmen.cpp
+--- ../gmapping_export_orig/log/scanstudio2carmen.cpp	2007-01-15 03:28:18.000000000 -0800
++++ ./log/scanstudio2carmen.cpp	2008-11-13 09:30:16.145836961 -0800
+@@ -1,6 +1,7 @@
+ #include <iostream>
+ #include <fstream>
+ #include <sstream>
++#include <cstdlib>
+ #include <assert.h>
+ #include <utils/point.h>
+ 
+diff -urN ../gmapping_export_orig/Makefile ./Makefile
+--- ../gmapping_export_orig/Makefile	2007-09-17 02:21:50.000000000 -0700
++++ ./Makefile	2008-11-13 09:30:23.345742259 -0800
+@@ -6,7 +6,8 @@
+ ifeq ($(MACOSX),1)
+ SUBDIRS=utils sensor log configfile scanmatcher gridfastslam 
+ else
+-SUBDIRS=utils sensor log configfile scanmatcher gridfastslam gui 
++#SUBDIRS=utils sensor log configfile scanmatcher gridfastslam gui 
++SUBDIRS=utils sensor log configfile scanmatcher gridfastslam
+ endif
+ endif
+ 
+diff -urN ../gmapping_export_orig/particlefilter/particlefilter.h ./particlefilter/particlefilter.h
+--- ../gmapping_export_orig/particlefilter/particlefilter.h	2008-06-08 03:40:20.000000000 -0700
++++ ./particlefilter/particlefilter.h	2008-11-13 09:30:16.125742409 -0800
+@@ -1,6 +1,7 @@
+ #ifndef PARTICLEFILTER_H
+ #define PARTICLEFILTER_H
+ #include <stdlib.h>
++#include <float.h>
+ #include <sys/types.h>
+ #include<vector>
+ #include<utility>
+@@ -23,7 +24,8 @@
+ template <class OutputIterator, class Iterator>
+ double toNormalForm(OutputIterator& out, const Iterator & begin, const Iterator & end){
+ 	//determine the maximum
+-	double lmax=-MAXDOUBLE;
++	//double lmax=-MAXDOUBLE;
++	double lmax=-DBL_MAX;
+ 	for (Iterator it=begin; it!=end; it++){
+ 		lmax=lmax>((double)(*it))? lmax: (double)(*it);
+ 	}
+diff -urN ../gmapping_export_orig/scanmatcher/gridlinetraversal.h ./scanmatcher/gridlinetraversal.h
+--- ../gmapping_export_orig/scanmatcher/gridlinetraversal.h	2007-01-15 03:28:18.000000000 -0800
++++ ./scanmatcher/gridlinetraversal.h	2008-11-13 09:30:16.159493409 -0800
+@@ -1,6 +1,7 @@
+ #ifndef GRIDLINETRAVERSAL_H
+ #define GRIDLINETRAVERSAL_H
+ 
++#include <cstdlib>
+ #include <utils/point.h>
+ 
+ namespace GMapping {
+diff -urN ../gmapping_export_orig/scanmatcher/icptest.cpp ./scanmatcher/icptest.cpp
+--- ../gmapping_export_orig/scanmatcher/icptest.cpp	2007-01-15 03:28:18.000000000 -0800
++++ ./scanmatcher/icptest.cpp	2008-11-13 09:30:16.159493409 -0800
+@@ -1,5 +1,6 @@
+ #include <iostream>
+ #include <fstream>
++#include <cstdlib>
+ 
+ #include <list>
+ #include "icp.h"
+diff -urN ../gmapping_export_orig/scanmatcher/scanmatcher.cpp ./scanmatcher/scanmatcher.cpp
+--- ../gmapping_export_orig/scanmatcher/scanmatcher.cpp	2007-08-27 08:29:07.000000000 -0700
++++ ./scanmatcher/scanmatcher.cpp	2008-11-13 09:30:16.159493409 -0800
+@@ -1,5 +1,7 @@
+ #include <list>
+ #include <iostream>
++#include <cstring>
++#include <limits>
+ 
+ #include "scanmatcher.h"
+ #include "gridlinetraversal.h"
+diff -urN ../gmapping_export_orig/scanmatcher/scanmatcher.h ./scanmatcher/scanmatcher.h
+--- ../gmapping_export_orig/scanmatcher/scanmatcher.h	2007-08-27 08:29:07.000000000 -0700
++++ ./scanmatcher/scanmatcher.h	2008-11-13 09:30:16.125742409 -0800
+@@ -7,7 +7,7 @@
+ #include <utils/stat.h>
+ #include <iostream>
+ #include <utils/gvalues.h>
+-#define LASER_MAXBEAMS 1024
++#define LASER_MAXBEAMS 2048
+ 
+ namespace GMapping {
+ 
+diff -urN ../gmapping_export_orig/scanmatcher/scanmatch_test.cpp ./scanmatcher/scanmatch_test.cpp
+--- ../gmapping_export_orig/scanmatcher/scanmatch_test.cpp	2007-01-15 03:28:18.000000000 -0800
++++ ./scanmatcher/scanmatch_test.cpp	2008-11-13 09:30:16.159493409 -0800
+@@ -1,4 +1,5 @@
+ 
++#include <cstdlib>
+ #include <fstream>
+ #include <iostream>
+ #include <log/carmenconfiguration.h>
+diff -urN ../gmapping_export_orig/sensor/sensor_range/rangereading.cpp ./sensor/sensor_range/rangereading.cpp
+--- ../gmapping_export_orig/sensor/sensor_range/rangereading.cpp	2008-06-08 03:40:20.000000000 -0700
++++ ./sensor/sensor_range/rangereading.cpp	2008-11-13 09:30:16.169493147 -0800
+@@ -1,3 +1,4 @@
++#include <limits>
+ #include <iostream>
+ #include <assert.h>
+ #include <sys/types.h>
