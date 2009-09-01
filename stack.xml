@@ -7,11 +7,11 @@
   <author>Brian Gerkey</author>
   <license>CreativeCommons-by-nc-sa-2.0</license>  
   <review status="unreviewed" notes=""/>
-  <url>http://ros.org/wiki/map_building</url>
-  <depend stack="geometry"/> <!-- tf --> 
-  <depend stack="ros"/> <!-- roscpp, rosconsole, std_msgs --> 
-  <depend stack="navigation"/> <!-- map_server --> 
-  <depend stack="common"/> <!-- laser_scan --> 
-  <depend stack="common_msgs"/> <!-- nav_msgs --> 
+
+  <url>http://ros.org/wiki/slam_gmapping</url>
+  <depend stack="geometry"/> <!-- tf -->
+  <depend stack="ros"/> <!-- rosconsole, std_msgs, roscpp -->
+  <depend stack="navigation"/> <!-- map_server -->
+  <depend stack="common_msgs"/> <!-- nav_msgs -->
 
 </stack>
