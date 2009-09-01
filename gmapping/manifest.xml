@@ -12,7 +12,6 @@ Brian Gerkey</author>
   <depend package="roscpp"/>
   <depend package="rosconsole"/>
   <depend package="std_msgs"/>
-  <depend package="laser_scan"/>
   <depend package="nav_msgs"/>
   <depend package="tf"/>
   <!-- map_server/map_saver is used in testing -->
