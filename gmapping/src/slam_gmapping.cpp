@@ -36,11 +36,11 @@ written to a file using e.g.
 
 Subscribes to (name/type):
 - @b "scan"/<a href="../../sensor_msgs/html/classstd__msgs_1_1LaserScan.html">sensor_msgs/LaserScan</a> : data from a laser range scanner 
-- @b "/tf_message": odometry from the robot
+- @b "/tf": odometry from the robot
 
 
 Publishes to (name/type):
-- @b "/tf_message"/tf/tfMessage: position relative to the map
+- @b "/tf"/tf/tfMessage: position relative to the map
 
 
 @section services
