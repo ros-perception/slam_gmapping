@@ -3,6 +3,9 @@
 
 This package contains GMapping, from OpenSlam, and a ROS wrapper. The gmapping package provides laser-based SLAM (Simultaneous Localization and Mapping), as a ROS node called slam_gmapping. Using slam_gmapping, you can create a 2-D occupancy grid map (like a building floorplan) from laser and pose data collected by a mobile robot.
 
+This package uses r39 from GMapping SVN repsitory at openslam.org, with
+minor patches applied to support newer versions of GCC and OSX.
+
 </description>
 <author>Giorgio Grisetti, Cyrill Stachniss, Wolfram Burgard; ROS wrapper by
 Brian Gerkey</author>
