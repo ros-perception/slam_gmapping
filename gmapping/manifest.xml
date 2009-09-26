@@ -10,7 +10,7 @@ minor patches applied to support newer versions of GCC and OSX.
 <author>Giorgio Grisetti, Cyrill Stachniss, Wolfram Burgard; ROS wrapper by
 Brian Gerkey</author>
 <license>CreativeCommons-by-nc-sa-2.0</license>
-<review status="3rdparty" notes=""/>
+<review status="API cleared" notes=""/>
 <url>http://openslam.org/</url>
   <depend package="roscpp"/>
   <depend package="rosconsole"/>

@@ -213,6 +213,7 @@ SlamGMapping::SlamGMapping():
   if(!node_.getParam("~lasamplestep", lasamplestep_))
     lasamplestep_ = 0.005;
 
+  sst_ = node_.advertise<nav_msgs::OccupancyGrid>("map", 1, true);
   ss_ = node_.advertiseService("dynamic_map", &SlamGMapping::mapCallback, this);
   scan_notifier_ = new tf::MessageNotifier<sensor_msgs::LaserScan>(tf_, boost::bind(&SlamGMapping::laserCallback, this, _1), "scan", odom_frame_, 5);
 
@@ -550,6 +551,8 @@ SlamGMapping::updateMap(const sensor_msgs::LaserScan& scan)
     }
   }
   got_map_ = true;
+
+  sst_.publish(map_.map);
 }
 
 bool 

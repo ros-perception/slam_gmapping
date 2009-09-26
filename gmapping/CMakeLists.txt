@@ -17,6 +17,6 @@ target_link_libraries(bin/slam_gmapping gridfastslam sensor_odometry sensor_rang
 
 # Need to make the tests more robust; currently the output map can differ
 # substantially between runs.
-#rosbuild_download_test_data(http://pr.willowgarage.com/data/gmapping/basic_localization_stage.bag test/basic_localization_stage.bag)
-#rosbuild_download_test_data(http://pr.willowgarage.com/data/gmapping/basic_localization_stage_groundtruth.pgm test/basic_localization_stage_groundtruth.pgm)
-#rosbuild_add_rostest(test/basic_localization_stage.launch)
+rosbuild_download_test_data(http://pr.willowgarage.com/data/gmapping/basic_localization_stage.bag test/basic_localization_stage.bag)
+rosbuild_download_test_data(http://pr.willowgarage.com/data/gmapping/basic_localization_stage_groundtruth.pgm test/basic_localization_stage_groundtruth.pgm)
+rosbuild_add_rostest(test/basic_localization_stage.launch)
