@@ -36,11 +36,11 @@ written to a file using e.g.
 
 Subscribes to (name/type):
 - @b "scan"/<a href="../../sensor_msgs/html/classstd__msgs_1_1LaserScan.html">sensor_msgs/LaserScan</a> : data from a laser range scanner 
-- @b "/tf_message": odometry from the robot
+- @b "/tf": odometry from the robot
 
 
 Publishes to (name/type):
-- @b "/tf_message"/tf/tfMessage: position relative to the map
+- @b "/tf"/tf/tfMessage: position relative to the map
 
 
 @section services
@@ -114,6 +114,7 @@ Initial map dimensions and resolution:
 
 #include "ros/ros.h"
 #include "ros/console.h"
+#include "nav_msgs/MapMetaData.h"
 
 #include "gmapping/sensor/sensor_range/rangesensor.h"
 #include "gmapping/sensor/sensor_odometry/odometrysensor.h"
@@ -141,80 +142,87 @@ SlamGMapping::SlamGMapping():
   got_first_scan_ = false;
   got_map_ = false;
 
+  ros::NodeHandle private_nh_("~");
+
   // Parameters used by our GMapping wrapper
-  if(!node_.getParam("~inverted_laser", inverted_laser_))
+  if(!private_nh_.getParam("inverted_laser", inverted_laser_))
     inverted_laser_ = false;
-  if(!node_.getParam("~throttle_scans", throttle_scans_))
+  if(!private_nh_.getParam("throttle_scans", throttle_scans_))
     throttle_scans_ = 1;
-  if(!node_.getParam("~base_frame", base_frame_))
+  if(!private_nh_.getParam("base_frame", base_frame_))
     base_frame_ = "base_link";
-  if(!node_.getParam("~laser_frame", laser_frame_))
+  if(!private_nh_.getParam("laser_frame", laser_frame_))
     laser_frame_ = "base_laser";
-  if(!node_.getParam("~map_frame", map_frame_))
+  if(!private_nh_.getParam("map_frame", map_frame_))
     map_frame_ = "map";
-  if(!node_.getParam("~odom_frame", odom_frame_))
+  if(!private_nh_.getParam("odom_frame", odom_frame_))
     odom_frame_ = "odom";
 
   double tmp;
-  if(!node_.getParam("~map_update_interval", tmp))
+  if(!private_nh_.getParam("map_update_interval", tmp))
     tmp = 5.0;
   map_update_interval_.fromSec(tmp);
   
   // Parameters used by GMapping itself
   maxUrange_ = 0.0;  maxRange_ = 0.0; // preliminary default, will be set in initMapper()
-  if(!node_.getParam("~sigma", sigma_))
+  if(!private_nh_.getParam("sigma", sigma_))
     sigma_ = 0.05;
-  if(!node_.getParam("~kernelSize", kernelSize_))
+  if(!private_nh_.getParam("kernelSize", kernelSize_))
     kernelSize_ = 1;
-  if(!node_.getParam("~lstep", lstep_))
+  if(!private_nh_.getParam("lstep", lstep_))
     lstep_ = 0.05;
-  if(!node_.getParam("~astep", astep_))
+  if(!private_nh_.getParam("astep", astep_))
     astep_ = 0.05;
-  if(!node_.getParam("~iterations", iterations_))
+  if(!private_nh_.getParam("iterations", iterations_))
     iterations_ = 5;
-  if(!node_.getParam("~lsigma", lsigma_))
+  if(!private_nh_.getParam("lsigma", lsigma_))
     lsigma_ = 0.075;
-  if(!node_.getParam("~ogain", ogain_))
+  if(!private_nh_.getParam("ogain", ogain_))
     ogain_ = 3.0;
-  if(!node_.getParam("~lskip", lskip_))
+  if(!private_nh_.getParam("lskip", lskip_))
     lskip_ = 0;
-  if(!node_.getParam("~srr", srr_))
+  if(!private_nh_.getParam("srr", srr_))
     srr_ = 0.1;
-  if(!node_.getParam("~srt", srt_))
+  if(!private_nh_.getParam("srt", srt_))
     srt_ = 0.2;
-  if(!node_.getParam("~str", str_))
+  if(!private_nh_.getParam("str", str_))
     str_ = 0.1;
-  if(!node_.getParam("~stt", stt_))
+  if(!private_nh_.getParam("stt", stt_))
     stt_ = 0.2;
-  if(!node_.getParam("~linearUpdate", linearUpdate_))
+  if(!private_nh_.getParam("linearUpdate", linearUpdate_))
     linearUpdate_ = 1.0;
-  if(!node_.getParam("~angularUpdate", angularUpdate_))
+  if(!private_nh_.getParam("angularUpdate", angularUpdate_))
     angularUpdate_ = 0.5;
-  if(!node_.getParam("~resampleThreshold", resampleThreshold_))
+  if(!private_nh_.getParam("resampleThreshold", resampleThreshold_))
     resampleThreshold_ = 0.5;
-  if(!node_.getParam("~particles", particles_))
+  if(!private_nh_.getParam("particles", particles_))
     particles_ = 30;
-  if(!node_.getParam("~xmin", xmin_))
+  if(!private_nh_.getParam("xmin", xmin_))
     xmin_ = -100.0;
-  if(!node_.getParam("~ymin", ymin_))
+  if(!private_nh_.getParam("ymin", ymin_))
     ymin_ = -100.0;
-  if(!node_.getParam("~xmax", xmax_))
+  if(!private_nh_.getParam("xmax", xmax_))
     xmax_ = 100.0;
-  if(!node_.getParam("~ymax", ymax_))
+  if(!private_nh_.getParam("ymax", ymax_))
     ymax_ = 100.0;
-  if(!node_.getParam("~delta", delta_))
+  if(!private_nh_.getParam("delta", delta_))
     delta_ = 0.05;
-  if(!node_.getParam("~llsamplerange", llsamplerange_))
+  if(!private_nh_.getParam("llsamplerange", llsamplerange_))
     llsamplerange_ = 0.01;
-  if(!node_.getParam("~llsamplestep", llsamplestep_))
+  if(!private_nh_.getParam("llsamplestep", llsamplestep_))
     llsamplestep_ = 0.01;
-  if(!node_.getParam("~lasamplerange", lasamplerange_))
+  if(!private_nh_.getParam("lasamplerange", lasamplerange_))
     lasamplerange_ = 0.005;
-  if(!node_.getParam("~lasamplestep", lasamplestep_))
+  if(!private_nh_.getParam("lasamplestep", lasamplestep_))
     lasamplestep_ = 0.005;
 
+  sst_ = node_.advertise<nav_msgs::OccupancyGrid>("map", 1, true);
+  sstm_ = node_.advertise<nav_msgs::MapMetaData>("map_metadata", 1, true);
   ss_ = node_.advertiseService("dynamic_map", &SlamGMapping::mapCallback, this);
-  scan_notifier_ = new tf::MessageNotifier<sensor_msgs::LaserScan>(tf_, boost::bind(&SlamGMapping::laserCallback, this, _1), "scan", odom_frame_, 5);
+  scan_filter_sub_ = new message_filters::Subscriber<sensor_msgs::LaserScan>(node_, "scan", 5);
+  scan_filter_ = new tf::MessageFilter<sensor_msgs::LaserScan>(*scan_filter_sub_, tf_, odom_frame_, 5);
+  scan_filter_->registerCallback(boost::bind(&SlamGMapping::laserCallback, this, _1));
+  //scan_notifier_ = new tf::MessageNotifier<sensor_msgs::LaserScan>(tf_, boost::bind(&SlamGMapping::laserCallback, this, _1), "scan", odom_frame_, 5);
 
   timer_ = node_.createTimer(ros::Duration(0.05), boost::bind(&SlamGMapping::publishTransform, this));
 }
@@ -226,8 +234,10 @@ SlamGMapping::~SlamGMapping()
     delete gsp_laser_;
   if(gsp_odom_)
     delete gsp_odom_;
-  if (scan_notifier_)
-    delete scan_notifier_;
+  if (scan_filter_)
+    delete scan_filter_;
+  if (scan_filter_sub_)
+    delete scan_filter_sub_;
 }
 
 bool
@@ -288,9 +298,10 @@ SlamGMapping::initMapper(const sensor_msgs::LaserScan& scan)
 
 
   // setting maxRange and maxUrange here so we can set a reasonable default
-  if(!node_.getParam("~maxRange", maxRange_))
+  ros::NodeHandle private_nh_("~");
+  if(!private_nh_.getParam("maxRange", maxRange_))
     maxRange_ = scan.range_max - 0.01;
-  if(!node_.getParam("~maxUrange", maxUrange_))
+  if(!private_nh_.getParam("maxUrange", maxUrange_))
     maxUrange_ = maxRange_;
 
   // The laser must be called "FLASER"
@@ -394,7 +405,7 @@ SlamGMapping::addScan(const sensor_msgs::LaserScan& scan, GMapping::OrientedPoin
 }
 
 void
-SlamGMapping::laserCallback(const tf::MessageNotifier<sensor_msgs::LaserScan>::MessagePtr& scan)
+SlamGMapping::laserCallback(const sensor_msgs::LaserScan::ConstPtr& scan)
 {
   laser_count_++;
   if ((laser_count_ % throttle_scans_) != 0)
@@ -550,6 +561,9 @@ SlamGMapping::updateMap(const sensor_msgs::LaserScan& scan)
     }
   }
   got_map_ = true;
+
+  sst_.publish(map_.map);
+  sstm_.publish(map_.map.info);
 }
 
 bool 

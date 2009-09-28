@@ -21,7 +21,8 @@
 #include "nav_msgs/GetMap.h"
 #include "tf/transform_listener.h"
 #include "tf/transform_broadcaster.h"
-#include <tf/message_notifier.h>
+#include "message_filters/subscriber.h"
+#include "tf/message_filter.h"
 
 #include "gmapping/gridfastslam/gridslamprocessor.h"
 #include "gmapping/sensor/sensor_base/sensor.h"
@@ -34,16 +35,19 @@ class SlamGMapping
 
     void publishTransform();
   
-    void laserCallback(const tf::MessageNotifier<sensor_msgs::LaserScan>::MessagePtr& message);
+    void laserCallback(const sensor_msgs::LaserScan::ConstPtr& scan);
     bool mapCallback(nav_msgs::GetMap::Request  &req,
                      nav_msgs::GetMap::Response &res);
 
   private:
     ros::NodeHandle node_;
+    ros::Publisher sst_;
+    ros::Publisher sstm_;
     ros::ServiceServer ss_;
     ros::Timer timer_;
     tf::TransformListener tf_;
-    tf::MessageNotifier<sensor_msgs::LaserScan>* scan_notifier_;
+    message_filters::Subscriber<sensor_msgs::LaserScan>* scan_filter_sub_;
+    tf::MessageFilter<sensor_msgs::LaserScan>* scan_filter_;
     tf::TransformBroadcaster* tfB_;
 
     GMapping::GridSlamProcessor* gsp_;

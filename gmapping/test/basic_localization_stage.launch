@@ -1,10 +1,11 @@
 <launch>
   <param name="/use_sim_time" value="true"/>
-  <node pkg="rosrecord" type="rosplay" 
+  <node pkg="rosrecord" type="rosplay" name="rosplay"
         args="-s 5 -r 1 -b 10 $(find gmapping)/test/basic_localization_stage.bag"/>
   <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen">
     <remap from="scan" to="base_scan"/>
   </node>
-  <test time-limit="180" test-name="basic_localization_stage" pkg="gmapping" 
-        type="test_map.py" args="90.0"/>
+  <!--test time-limit="180" test-name="basic_localization_stage" pkg="gmapping" 
+        type="test_map.py" args="90.0"/-->
+  <test time-limit="180" test-name="map_server_test" pkg="gmapping" type="rtest" args="90.0 0.05 4000 4000 0.008 0.010"/>
 </launch>

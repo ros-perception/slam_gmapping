@@ -16,7 +16,7 @@
 
 /* Author: Brian Gerkey */
 
-#include <ros/node.h>
+#include <ros/ros.h>
 
 #include "slam_gmapping.h"
 
