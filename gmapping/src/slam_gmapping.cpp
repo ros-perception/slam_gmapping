@@ -219,7 +219,10 @@ SlamGMapping::SlamGMapping():
   sst_ = node_.advertise<nav_msgs::OccupancyGrid>("map", 1, true);
   sstm_ = node_.advertise<nav_msgs::MapMetaData>("map_metadata", 1, true);
   ss_ = node_.advertiseService("dynamic_map", &SlamGMapping::mapCallback, this);
-  scan_notifier_ = new tf::MessageNotifier<sensor_msgs::LaserScan>(tf_, boost::bind(&SlamGMapping::laserCallback, this, _1), "scan", odom_frame_, 5);
+  scan_filter_sub_ = new message_filters::Subscriber<sensor_msgs::LaserScan>(node_, "scan", 5);
+  scan_filter_ = new tf::MessageFilter<sensor_msgs::LaserScan>(*scan_filter_sub_, tf_, odom_frame_, 5);
+  scan_filter_->registerCallback(boost::bind(&SlamGMapping::laserCallback, this, _1));
+  //scan_notifier_ = new tf::MessageNotifier<sensor_msgs::LaserScan>(tf_, boost::bind(&SlamGMapping::laserCallback, this, _1), "scan", odom_frame_, 5);
 
   timer_ = node_.createTimer(ros::Duration(0.05), boost::bind(&SlamGMapping::publishTransform, this));
 }
@@ -231,8 +234,10 @@ SlamGMapping::~SlamGMapping()
     delete gsp_laser_;
   if(gsp_odom_)
     delete gsp_odom_;
-  if (scan_notifier_)
-    delete scan_notifier_;
+  if (scan_filter_)
+    delete scan_filter_;
+  if (scan_filter_sub_)
+    delete scan_filter_sub_;
 }
 
 bool
@@ -400,7 +405,7 @@ SlamGMapping::addScan(const sensor_msgs::LaserScan& scan, GMapping::OrientedPoin
 }
 
 void
-SlamGMapping::laserCallback(const tf::MessageNotifier<sensor_msgs::LaserScan>::MessagePtr& scan)
+SlamGMapping::laserCallback(const sensor_msgs::LaserScan::ConstPtr& scan)
 {
   laser_count_++;
   if ((laser_count_ % throttle_scans_) != 0)

@@ -17,6 +17,7 @@ Brian Gerkey</author>
   <depend package="std_msgs"/>
   <depend package="nav_msgs"/>
   <depend package="tf"/>
+  <depend package="message_filters"/>
   <!-- map_server/map_saver is used in testing -->
   <depend package="map_server"/>
 
