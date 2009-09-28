@@ -41,6 +41,7 @@ class SlamGMapping
   private:
     ros::NodeHandle node_;
     ros::Publisher sst_;
+    ros::Publisher sstm_;
     ros::ServiceServer ss_;
     ros::Timer timer_;
     tf::TransformListener tf_;
