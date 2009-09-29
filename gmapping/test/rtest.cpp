@@ -112,7 +112,7 @@ TEST_F(MapClientTest, subscribe_topic)
   while(!got_map_ && i > 0)
   {
     ros::spinOnce();
-    ros::Duration d = ros::Duration().fromSec(0.25);
+    ros::WallDuration d(0.25);
     d.sleep();
     i--;
   }
@@ -131,7 +131,7 @@ TEST_F(MapClientTest, subscribe_topic_metadata)
   while(!got_map_metadata_ && i > 0)
   {
     ros::spinOnce();
-    ros::Duration d = ros::Duration().fromSec(0.25);
+    ros::WallDuration d(0.25);
     d.sleep();
     i--;
   }
