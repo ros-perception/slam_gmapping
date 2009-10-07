@@ -532,8 +532,8 @@ SlamGMapping::updateMap(const sensor_msgs::LaserScan& scan)
 
     map_.map.info.width = smap.getMapSizeX();
     map_.map.info.height = smap.getMapSizeY();
-    map_.map.info.origin.position.x = -(xmin_ + xmax_)/2 + xmin_;
-    map_.map.info.origin.position.y = -(ymin_ + ymax_)/2 + ymin_;
+    map_.map.info.origin.position.x = xmin_;
+    map_.map.info.origin.position.y = ymin_;
     map_.map.data.resize(map_.map.info.width * map_.map.info.height);
 
     ROS_DEBUG("map origin: (%f, %f)", map_.map.info.origin.position.x, map_.map.info.origin.position.y);
