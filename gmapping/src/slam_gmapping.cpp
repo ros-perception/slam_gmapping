@@ -56,7 +56,6 @@ Parameters used by our GMapping wrapper:
 - @b "~inverted_laser" : @b [bool] specifies if the laser is mounted upside-down
 - @b "~throttle_scans": @b [int] throw away every nth laser scan
 - @b "~base_frame": @b [string] the tf frame_id to use for the robot base pose
-- @b "~laser_frame": @b [string] the tf frame_id to use for the laser pose
 - @b "~map_frame": @b [string] the tf frame_id where the robot pose on the map is published
 - @b "~odom_frame": @b [string] the tf frame_id from which odometry is read
 - @b "~map_update_interval": @b [double] time in seconds between two recalculations of the map
@@ -151,8 +150,6 @@ SlamGMapping::SlamGMapping():
     throttle_scans_ = 1;
   if(!private_nh_.getParam("base_frame", base_frame_))
     base_frame_ = "base_link";
-  if(!private_nh_.getParam("laser_frame", laser_frame_))
-    laser_frame_ = "base_laser";
   if(!private_nh_.getParam("map_frame", map_frame_))
     map_frame_ = "map";
   if(!private_nh_.getParam("odom_frame", odom_frame_))
