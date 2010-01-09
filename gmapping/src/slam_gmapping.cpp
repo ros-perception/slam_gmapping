@@ -580,6 +580,6 @@ void SlamGMapping::publishTransform()
 {
   map_to_odom_mutex_.lock();
   ros::Time tf_expiration = ros::Time::now() + ros::Duration(0.05);
-  tfB_->sendTransform( tf::Stamped<tf::Transform> (map_to_odom_, ros::Time::now(), odom_frame_, map_frame_));
+  tfB_->sendTransform( tf::StampedTransform (map_to_odom_, ros::Time::now(), map_frame_, odom_frame_));
   map_to_odom_mutex_.unlock();
 }
