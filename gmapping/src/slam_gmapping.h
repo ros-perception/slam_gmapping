@@ -27,6 +27,8 @@
 #include "gmapping/gridfastslam/gridslamprocessor.h"
 #include "gmapping/sensor/sensor_base/sensor.h"
 
+#include <boost/thread.hpp>
+
 class SlamGMapping
 {
   public:
@@ -63,6 +65,7 @@ class SlamGMapping
     ros::Duration map_update_interval_;
     tf::Transform map_to_odom_;
     boost::mutex map_to_odom_mutex_;
+    boost::mutex map_mutex_;
 
     int laser_count_;
     int throttle_scans_;
