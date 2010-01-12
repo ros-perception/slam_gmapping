@@ -1,5 +1,8 @@
 all: installed
 
+# We build from a tarball of an svn export of gmapping at revision 39.  To
+# get the original code (e.g., to make a new patch):
+#  svn co -r 39 https://openslam.informatik.uni-freiburg.de/data/svn/gmapping/trunk gmapping-svn
 FILENAME = gmapping_r39.tar.gz
 TARBALL = build/$(FILENAME)
 TARBALL_URL = http://pr.willowgarage.com/downloads/$(FILENAME)
