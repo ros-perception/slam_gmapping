@@ -122,7 +122,7 @@ Initial map dimensions and resolution:
 #define MAP_IDX(sx, i, j) ((sx) * (j) + (i))
 
 SlamGMapping::SlamGMapping():
-  map_to_odom_(tf::Transform(tf::Quaternion( 0, 0, 0 ), tf::Point(0, 0, 0 ))),
+  map_to_odom_(tf::Transform(tf::createQuaternionFromRPY( 0, 0, 0 ), tf::Point(0, 0, 0 ))),
   laser_count_(0)
 {
   // log4cxx::Logger::getLogger(ROSCONSOLE_DEFAULT_NAME)->setLevel(ros::console::g_level_lookup[ros::console::levels::Debug]);
@@ -154,6 +154,9 @@ SlamGMapping::SlamGMapping():
     map_frame_ = "map";
   if(!private_nh_.getParam("odom_frame", odom_frame_))
     odom_frame_ = "odom";
+
+  double transform_publish_period;
+  private_nh_.param("transform_publish_period", transform_publish_period, 0.05);
 
   double tmp;
   if(!private_nh_.getParam("map_update_interval", tmp))
@@ -219,9 +222,8 @@ SlamGMapping::SlamGMapping():
   scan_filter_sub_ = new message_filters::Subscriber<sensor_msgs::LaserScan>(node_, "scan", 5);
   scan_filter_ = new tf::MessageFilter<sensor_msgs::LaserScan>(*scan_filter_sub_, tf_, odom_frame_, 5);
   scan_filter_->registerCallback(boost::bind(&SlamGMapping::laserCallback, this, _1));
-  //scan_notifier_ = new tf::MessageNotifier<sensor_msgs::LaserScan>(tf_, boost::bind(&SlamGMapping::laserCallback, this, _1), "scan", odom_frame_, 5);
 
-  timer_ = node_.createTimer(ros::Duration(0.05), boost::bind(&SlamGMapping::publishTransform, this));
+  timer_ = node_.createTimer(ros::Duration(transform_publish_period), boost::bind(&SlamGMapping::publishTransform, this));
 }
 
 SlamGMapping::~SlamGMapping()
@@ -241,7 +243,7 @@ bool
 SlamGMapping::getOdomPose(GMapping::OrientedPoint& gmap_pose, const ros::Time& t)
 {
   // Get the robot's pose
-  tf::Stamped<tf::Pose> ident (btTransform(btQuaternion(0,0,0),
+  tf::Stamped<tf::Pose> ident (btTransform(tf::createQuaternionFromRPY(0,0,0),
                                            btVector3(0,0,0)), t, base_frame_);
   tf::Stamped<btTransform> odom_pose;
   try
@@ -253,8 +255,7 @@ SlamGMapping::getOdomPose(GMapping::OrientedPoint& gmap_pose, const ros::Time& t
     ROS_WARN("Failed to compute odom pose, skipping scan (%s)", e.what());
     return false;
   }
-  double yaw,pitch,roll;
-  odom_pose.getBasis().getEulerZYX(yaw, pitch, roll);
+  double yaw = tf::getYaw(odom_pose.getRotation());
 
   gmap_pose = GMapping::OrientedPoint(odom_pose.getOrigin().x(),
                                       odom_pose.getOrigin().y(),
@@ -281,9 +282,8 @@ SlamGMapping::initMapper(const sensor_msgs::LaserScan& scan)
              e.what());
     return false;
   }
-  double yaw,pitch,roll;
-  btMatrix3x3 mat =  laser_pose.getBasis();
-  mat.getEulerZYX(yaw, pitch, roll);
+
+  double yaw = tf::getYaw(laser_pose.getRotation());
 
   GMapping::OrientedPoint gmap_pose(laser_pose.getOrigin().x(),
                                     laser_pose.getOrigin().y(),
@@ -431,7 +431,7 @@ SlamGMapping::laserCallback(const sensor_msgs::LaserScan::ConstPtr& scan)
     tf::Stamped<tf::Pose> odom_to_map;
     try
     {
-      tf_.transformPose(odom_frame_,tf::Stamped<tf::Pose> (btTransform(btQuaternion(mpose.theta, 0, 0),
+      tf_.transformPose(odom_frame_,tf::Stamped<tf::Pose> (btTransform(tf::createQuaternionFromRPY(0, 0, mpose.theta),
                                                                     btVector3(mpose.x, mpose.y, 0.0)).inverse(),
                                                                     scan->header.stamp, base_frame_),odom_to_map);
     }
@@ -457,6 +457,7 @@ SlamGMapping::laserCallback(const sensor_msgs::LaserScan::ConstPtr& scan)
 void
 SlamGMapping::updateMap(const sensor_msgs::LaserScan& scan)
 {
+  boost::mutex::scoped_lock(map_mutex_);
   GMapping::ScanMatcher matcher;
   double* laser_angles = new double[scan.ranges.size()];
   double theta = scan.angle_min;
@@ -559,6 +560,10 @@ SlamGMapping::updateMap(const sensor_msgs::LaserScan& scan)
   }
   got_map_ = true;
 
+  //make sure to set the header information on the map
+  map_.map.header.stamp = ros::Time::now();
+  map_.map.header.frame_id = map_frame_;
+
   sst_.publish(map_.map);
   sstm_.publish(map_.map.info);
 }
@@ -567,6 +572,7 @@ bool
 SlamGMapping::mapCallback(nav_msgs::GetMap::Request  &req,
                           nav_msgs::GetMap::Response &res)
 {
+  boost::mutex::scoped_lock(map_mutex_);
   if(got_map_ && map_.map.info.width && map_.map.info.height)
   {
     res = map_;
