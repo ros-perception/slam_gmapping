@@ -123,7 +123,7 @@ Initial map dimensions and resolution:
 
 SlamGMapping::SlamGMapping():
   map_to_odom_(tf::Transform(tf::createQuaternionFromRPY( 0, 0, 0 ), tf::Point(0, 0, 0 ))),
-  laser_count_(0)
+  laser_count_(0), transform_thread_(NULL)
 {
   // log4cxx::Logger::getLogger(ROSCONSOLE_DEFAULT_NAME)->setLevel(ros::console::g_level_lookup[ros::console::levels::Debug]);
 
@@ -223,11 +223,27 @@ SlamGMapping::SlamGMapping():
   scan_filter_ = new tf::MessageFilter<sensor_msgs::LaserScan>(*scan_filter_sub_, tf_, odom_frame_, 5);
   scan_filter_->registerCallback(boost::bind(&SlamGMapping::laserCallback, this, _1));
 
-  timer_ = node_.createTimer(ros::Duration(transform_publish_period), boost::bind(&SlamGMapping::publishTransform, this));
+  transform_thread_ = new boost::thread(boost::bind(&SlamGMapping::publishLoop, this, transform_publish_period));
+}
+
+void SlamGMapping::publishLoop(double transform_publish_period){
+  if(transform_publish_period == 0)
+    return;
+
+  ros::Rate r(1.0 / transform_publish_period);
+  while(ros::ok()){
+    publishTransform();
+    r.sleep();
+  }
 }
 
 SlamGMapping::~SlamGMapping()
 {
+  if(transform_thread_){
+    transform_thread_->join();
+    delete transform_thread_;
+  }
+
   delete gsp_;
   if(gsp_laser_)
     delete gsp_laser_;
