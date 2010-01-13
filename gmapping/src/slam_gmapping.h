@@ -40,13 +40,13 @@ class SlamGMapping
     void laserCallback(const sensor_msgs::LaserScan::ConstPtr& scan);
     bool mapCallback(nav_msgs::GetMap::Request  &req,
                      nav_msgs::GetMap::Response &res);
+    void publishLoop(double transform_publish_period);
 
   private:
     ros::NodeHandle node_;
     ros::Publisher sst_;
     ros::Publisher sstm_;
     ros::ServiceServer ss_;
-    ros::Timer timer_;
     tf::TransformListener tf_;
     message_filters::Subscriber<sensor_msgs::LaserScan>* scan_filter_sub_;
     tf::MessageFilter<sensor_msgs::LaserScan>* scan_filter_;
@@ -69,6 +69,8 @@ class SlamGMapping
 
     int laser_count_;
     int throttle_scans_;
+
+    boost::thread* transform_thread_;
 
     std::string base_frame_;
     std::string laser_frame_;
