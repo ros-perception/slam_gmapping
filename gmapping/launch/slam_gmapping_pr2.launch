@@ -18,6 +18,7 @@
       <param name="stt" value="0.2"/>
       <param name="linearUpdate" value="1.0"/>
       <param name="angularUpdate" value="0.5"/>
+      <param name="temporalUpdate" value="3.0"/>
       <param name="resampleThreshold" value="0.5"/>
       <param name="particles" value="30"/>
       <param name="xmin" value="-50.0"/>

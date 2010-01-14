@@ -100,6 +100,7 @@ class SlamGMapping
     double stt_;
     double linearUpdate_;
     double angularUpdate_;
+    double temporalUpdate_;
     double resampleThreshold_;
     int particles_;
     double xmin_;
