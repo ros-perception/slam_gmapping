@@ -27,7 +27,48 @@ Index: gridfastslam/gridslamprocessor.cpp
 ===================================================================
 --- gridfastslam/gridslamprocessor.cpp	(revision 39)
 +++ gridfastslam/gridslamprocessor.cpp	(working copy)
-@@ -402,6 +402,13 @@
+@@ -19,13 +19,16 @@
+ 
+   GridSlamProcessor::GridSlamProcessor(): m_infoStream(cout){
+     
++    period_ = 5.0;
+     m_obsSigmaGain=1;
+     m_resampleThreshold=0.5;
+     m_minimumScore=0.;
+   }
+   
+   GridSlamProcessor::GridSlamProcessor(const GridSlamProcessor& gsp) 
+-    :m_particles(gsp.m_particles), m_infoStream(cout){
++    :last_update_time_(0.0), m_particles(gsp.m_particles), m_infoStream(cout){
++
++    period_ = 5.0;
+     
+     m_obsSigmaGain=gsp.m_obsSigmaGain;
+     m_resampleThreshold=gsp.m_resampleThreshold;
+@@ -85,6 +88,7 @@
+   }
+   
+   GridSlamProcessor::GridSlamProcessor(std::ostream& infoS): m_infoStream(infoS){
++    period_ = 5.0;
+     m_obsSigmaGain=1;
+     m_resampleThreshold=0.5;
+     m_minimumScore=0.;
+@@ -374,10 +378,12 @@
+     
+     bool processed=false;
+ 
+-    // process a scan only if the robot has traveled a given distance
++    // process a scan only if the robot has traveled a given distance or a certain amount of time has elapsed
+     if (! m_count 
+ 	|| m_linearDistance>m_linearThresholdDistance 
+-	|| m_angularDistance>m_angularThresholdDistance){
++	|| m_angularDistance>m_angularThresholdDistance
++  || (reading.getTime() - last_update_time_) > period_){
++      last_update_time_ = reading.getTime();
+       
+       if (m_outputStream.is_open()){
+ 	m_outputStream << setiosflags(ios::fixed) << setprecision(6);
+@@ -402,6 +408,13 @@
  	plainReading[i]=reading[i];
        }
        m_infoStream << "m_count " << m_count << endl;
@@ -41,7 +82,7 @@ Index: gridfastslam/gridslamprocessor.cpp
        if (m_count>0){
  	scanMatch(plainReading);
  	if (m_outputStream.is_open()){
-@@ -432,7 +439,7 @@
+@@ -432,7 +445,7 @@
  	  m_outputStream << setiosflags(ios::fixed) << setprecision(6);
  	  m_outputStream << "NEFF " << m_neff << endl;
  	}
@@ -50,7 +91,7 @@ Index: gridfastslam/gridslamprocessor.cpp
  	
        } else {
  	m_infoStream << "Registering First Scan"<< endl;
-@@ -443,9 +450,9 @@
+@@ -443,9 +456,9 @@
  	  
  	  // cyr: not needed anymore, particles refer to the root in the beginning!
  	  TNode* node=new	TNode(it->pose, 0., it->node,  0);
@@ -83,6 +124,37 @@ Index: gridfastslam/gfs2log.cpp
  	if (argc<3){
  		cout << "usage gfs2log [-err] [-neff] [-part] [-odom] <infilename> <outfilename>" << endl;
  		cout << "  -odom : dump raw odometry in ODOM message instead of inpolated corrected one" << endl;
+Index: gridfastslam/gridslamprocessor.h
+===================================================================
+--- gridfastslam/gridslamprocessor.h	(revision 39)
++++ gridfastslam/gridslamprocessor.h	(working copy)
+@@ -148,6 +148,7 @@
+ 			       int iterations, double likelihoodSigma=1, double likelihoodGain=1, unsigned int likelihoodSkip=0);
+     void setMotionModelParameters(double srr, double srt, double str, double stt);
+     void setUpdateDistances(double linear, double angular, double resampleThreshold);
++    void setUpdatePeriod(double p) {period_=p;}
+     
+     //the "core" algorithm
+     void processTruePos(const OdometryReading& odometry);
+@@ -176,7 +177,7 @@
+     virtual void onOdometryUpdate();
+     virtual void onResampleUpdate();
+     virtual void onScanmatchUpdate();
+-	
++
+     //accessor methods
+     /**the maxrange of the laser to consider */
+     MEMBER_PARAM_SET_GET(m_matcher, double, laserMaxRange, protected, public, public);
+@@ -248,6 +249,9 @@
+  
+     /**the laser beams*/
+     unsigned int m_beams;
++    double last_update_time_;
++    double period_;
++	
+     
+     
+     /**the particles*/
 Index: gridfastslam/gridslamprocessor.hxx
 ===================================================================
 --- gridfastslam/gridslamprocessor.hxx	(revision 39)

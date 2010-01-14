@@ -193,6 +193,8 @@ SlamGMapping::SlamGMapping():
     linearUpdate_ = 1.0;
   if(!private_nh_.getParam("angularUpdate", angularUpdate_))
     angularUpdate_ = 0.5;
+  if(!private_nh_.getParam("temporalUpdate", temporalUpdate_))
+    temporalUpdate_ = 3.0;
   if(!private_nh_.getParam("resampleThreshold", resampleThreshold_))
     resampleThreshold_ = 0.5;
   if(!private_nh_.getParam("particles", particles_))
@@ -345,6 +347,7 @@ SlamGMapping::initMapper(const sensor_msgs::LaserScan& scan)
 
   gsp_->setMotionModelParameters(srr_, srt_, str_, stt_);
   gsp_->setUpdateDistances(linearUpdate_, angularUpdate_, resampleThreshold_);
+  gsp_->setUpdatePeriod(temporalUpdate_);
   gsp_->setgenerateMap(false);
   gsp_->GridSlamProcessor::init(particles_, xmin_, ymin_, xmax_, ymax_,
                                 delta_, initialPose);
