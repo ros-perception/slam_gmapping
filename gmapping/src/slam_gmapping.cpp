@@ -194,7 +194,7 @@ SlamGMapping::SlamGMapping():
   if(!private_nh_.getParam("angularUpdate", angularUpdate_))
     angularUpdate_ = 0.5;
   if(!private_nh_.getParam("temporalUpdate", temporalUpdate_))
-    temporalUpdate_ = 3.0;
+    temporalUpdate_ = -1.0;
   if(!private_nh_.getParam("resampleThreshold", resampleThreshold_))
     resampleThreshold_ = 0.5;
   if(!private_nh_.getParam("particles", particles_))
@@ -464,7 +464,7 @@ SlamGMapping::laserCallback(const sensor_msgs::LaserScan::ConstPtr& scan)
                                  tf::Point(      odom_to_map.getOrigin() ) ).inverse();
     map_to_odom_mutex_.unlock();
 
-    if((scan->header.stamp - last_map_update) > map_update_interval_)
+    if(!got_map_ || (scan->header.stamp - last_map_update) > map_update_interval_)
     {
       updateMap(*scan);
       last_map_update = scan->header.stamp;

@@ -53,6 +53,15 @@ Index: gridfastslam/gridslamprocessor.cpp
      m_obsSigmaGain=1;
      m_resampleThreshold=0.5;
      m_minimumScore=0.;
+@@ -146,7 +150,7 @@
+   
+   GridSlamProcessor::~GridSlamProcessor(){
+     cerr << __PRETTY_FUNCTION__ << ": Start" << endl;
+-    cerr << __PRETTY_FUNCTION__ << ": Deeting tree" << endl;
++    cerr << __PRETTY_FUNCTION__ << ": Deleting tree" << endl;
+     for (std::vector<Particle>::iterator it=m_particles.begin(); it!=m_particles.end(); it++){
+ #ifdef TREE_CONSISTENCY_CHECK		
+       TNode* node=it->node;
 @@ -374,10 +378,12 @@
      
      bool processed=false;
@@ -63,7 +72,7 @@ Index: gridfastslam/gridslamprocessor.cpp
  	|| m_linearDistance>m_linearThresholdDistance 
 -	|| m_angularDistance>m_angularThresholdDistance){
 +	|| m_angularDistance>m_angularThresholdDistance
-+  || (reading.getTime() - last_update_time_) > period_){
++  || (period_ >= 0.0 && (reading.getTime() - last_update_time_) > period_)){
 +      last_update_time_ = reading.getTime();
        
        if (m_outputStream.is_open()){
