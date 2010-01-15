@@ -6,7 +6,7 @@
   </description>
   <author>Brian Gerkey</author>
   <license>CreativeCommons-by-nc-sa-2.0</license>  
-  <review status="unreviewed" notes=""/>
+  <review status="Doc reviewed" notes=""/>
   <url>http://ros.org/wiki/slam_gmapping</url>
   <depend stack="common_msgs" /> <!-- nav_msgs -->
   <depend stack="geometry" /> <!-- tf -->
