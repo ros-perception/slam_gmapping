@@ -1,4 +1,4 @@
-<stack name="slam_gmapping" version="0.1.0">
+<stack>
   <description brief="Map Building with Gmapping">
 
      slam_gmapping contains the gmapping package, which provides SLAM capabilities. GMapping is a Creative-Commons-licensed open source package provided by OpenSlam.
@@ -7,11 +7,10 @@
   <author>Brian Gerkey</author>
   <license>CreativeCommons-by-nc-sa-2.0</license>  
   <review status="unreviewed" notes=""/>
-
   <url>http://ros.org/wiki/slam_gmapping</url>
-  <depend stack="geometry"/> <!-- tf -->
-  <depend stack="ros"/> <!-- rosconsole, std_msgs, roscpp -->
-  <depend stack="navigation"/> <!-- map_server -->
-  <depend stack="common_msgs"/> <!-- nav_msgs -->
+  <depend stack="common_msgs" /> <!-- nav_msgs -->
+  <depend stack="geometry" /> <!-- tf -->
+  <depend stack="navigation" /> <!-- map_server -->
+  <depend stack="ros" /> <!-- rosconsole, std_msgs, roscpp, message_filters -->
 
 </stack>
