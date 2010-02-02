@@ -108,6 +108,7 @@ class SlamGMapping
     double xmax_;
     double ymax_;
     double delta_;
+    double occ_thresh_;
     double llsamplerange_;
     double llsamplestep_;
     double lasamplerange_;

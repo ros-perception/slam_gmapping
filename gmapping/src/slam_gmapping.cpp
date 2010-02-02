@@ -209,6 +209,8 @@ SlamGMapping::SlamGMapping():
     ymax_ = 100.0;
   if(!private_nh_.getParam("delta", delta_))
     delta_ = 0.05;
+  if(!private_nh_.getParam("occ_thresh", occ_thresh_))
+    occ_thresh_ = 0.25;
   if(!private_nh_.getParam("llsamplerange", llsamplerange_))
     llsamplerange_ = 0.01;
   if(!private_nh_.getParam("llsamplestep", llsamplestep_))
@@ -562,17 +564,15 @@ SlamGMapping::updateMap(const sensor_msgs::LaserScan& scan)
     {
       /// @todo Sort out the unknown vs. free vs. obstacle thresholding
       GMapping::IntPoint p(x, y);
-//      double entropy = smap.cell(p).entropy();
-//      int e = (int)round(entropy * 140);
-//      if (e != 97)
-//        printf("entropy: %f %d\n", entropy, e);
-//      map_.map.data[MAP_IDX(map_.map.width, x, y)] = (int)round(entropy * 140);
       double occ=smap.cell(p);
       assert(occ <= 1.0);
       if(occ < 0)
         map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = -1;
-      else if(occ > 0.1)
-        map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = (int)round(occ*100.0);
+      else if(occ > occ_thresh_)
+      {
+        //map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = (int)round(occ*100.0);
+        map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = 100;
+      }
       else
         map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = 0;
     }
