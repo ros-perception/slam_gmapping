@@ -81,6 +81,7 @@ class SlamGMapping
     bool getOdomPose(GMapping::OrientedPoint& gmap_pose, const ros::Time& t);
     bool initMapper(const sensor_msgs::LaserScan& scan);
     bool addScan(const sensor_msgs::LaserScan& scan, GMapping::OrientedPoint& gmap_pose);
+    double computePoseEntropy();
     
     // Parameters used by GMapping
     double maxRange_;

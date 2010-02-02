@@ -475,6 +475,27 @@ SlamGMapping::laserCallback(const sensor_msgs::LaserScan::ConstPtr& scan)
   }
 }
 
+double
+SlamGMapping::computePoseEntropy()
+{
+  double weight_total=0.0;
+  for(std::vector<GMapping::GridSlamProcessor::Particle>::const_iterator it = gsp_->getParticles().begin();
+      it != gsp_->getParticles().end();
+      ++it)
+  {
+    weight_total += it->weight;
+  }
+  double entropy = 0.0;
+  for(std::vector<GMapping::GridSlamProcessor::Particle>::const_iterator it = gsp_->getParticles().begin();
+      it != gsp_->getParticles().end();
+      ++it)
+  {
+    if(it->weight/weight_total > 0.0)
+      entropy += it->weight/weight_total * log(it->weight/weight_total);
+  }
+  return -entropy;
+}
+
 void
 SlamGMapping::updateMap(const sensor_msgs::LaserScan& scan)
 {
@@ -498,6 +519,7 @@ SlamGMapping::updateMap(const sensor_msgs::LaserScan& scan)
 
   GMapping::GridSlamProcessor::Particle best =
           gsp_->getParticles()[gsp_->getBestParticleIndex()];
+  //printf("****entropy: %.6f\n", computePoseEntropy());
 
   if(!got_map_) {
     map_.map.info.resolution = delta_;
