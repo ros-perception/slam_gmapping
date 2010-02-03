@@ -220,6 +220,7 @@ SlamGMapping::SlamGMapping():
   if(!private_nh_.getParam("lasamplestep", lasamplestep_))
     lasamplestep_ = 0.005;
 
+  entropy_publisher_ = private_nh_.advertise<std_msgs::Float64>("entropy", 1, true);
   sst_ = node_.advertise<nav_msgs::OccupancyGrid>("map", 1, true);
   sstm_ = node_.advertise<nav_msgs::MapMetaData>("map_metadata", 1, true);
   ss_ = node_.advertiseService("dynamic_map", &SlamGMapping::mapCallback, this);
@@ -519,7 +520,10 @@ SlamGMapping::updateMap(const sensor_msgs::LaserScan& scan)
 
   GMapping::GridSlamProcessor::Particle best =
           gsp_->getParticles()[gsp_->getBestParticleIndex()];
-  //printf("****entropy: %.6f\n", computePoseEntropy());
+  std_msgs::Float64 entropy;
+  entropy.data = computePoseEntropy();
+  if(entropy.data > 0.0)
+    entropy_publisher_.publish(entropy);
 
   if(!got_map_) {
     map_.map.info.resolution = delta_;
