@@ -18,6 +18,7 @@
 
 #include "ros/ros.h"
 #include "sensor_msgs/LaserScan.h"
+#include "std_msgs/Float64.h"
 #include "nav_msgs/GetMap.h"
 #include "tf/transform_listener.h"
 #include "tf/transform_broadcaster.h"
@@ -44,6 +45,7 @@ class SlamGMapping
 
   private:
     ros::NodeHandle node_;
+    ros::Publisher entropy_publisher_;
     ros::Publisher sst_;
     ros::Publisher sstm_;
     ros::ServiceServer ss_;
@@ -81,6 +83,7 @@ class SlamGMapping
     bool getOdomPose(GMapping::OrientedPoint& gmap_pose, const ros::Time& t);
     bool initMapper(const sensor_msgs::LaserScan& scan);
     bool addScan(const sensor_msgs::LaserScan& scan, GMapping::OrientedPoint& gmap_pose);
+    double computePoseEntropy();
     
     // Parameters used by GMapping
     double maxRange_;
@@ -108,6 +111,7 @@ class SlamGMapping
     double xmax_;
     double ymax_;
     double delta_;
+    double occ_thresh_;
     double llsamplerange_;
     double llsamplestep_;
     double lasamplerange_;

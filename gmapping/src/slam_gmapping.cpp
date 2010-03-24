@@ -209,6 +209,8 @@ SlamGMapping::SlamGMapping():
     ymax_ = 100.0;
   if(!private_nh_.getParam("delta", delta_))
     delta_ = 0.05;
+  if(!private_nh_.getParam("occ_thresh", occ_thresh_))
+    occ_thresh_ = 0.25;
   if(!private_nh_.getParam("llsamplerange", llsamplerange_))
     llsamplerange_ = 0.01;
   if(!private_nh_.getParam("llsamplestep", llsamplestep_))
@@ -218,6 +220,7 @@ SlamGMapping::SlamGMapping():
   if(!private_nh_.getParam("lasamplestep", lasamplestep_))
     lasamplestep_ = 0.005;
 
+  entropy_publisher_ = private_nh_.advertise<std_msgs::Float64>("entropy", 1, true);
   sst_ = node_.advertise<nav_msgs::OccupancyGrid>("map", 1, true);
   sstm_ = node_.advertise<nav_msgs::MapMetaData>("map_metadata", 1, true);
   ss_ = node_.advertiseService("dynamic_map", &SlamGMapping::mapCallback, this);
@@ -473,6 +476,27 @@ SlamGMapping::laserCallback(const sensor_msgs::LaserScan::ConstPtr& scan)
   }
 }
 
+double
+SlamGMapping::computePoseEntropy()
+{
+  double weight_total=0.0;
+  for(std::vector<GMapping::GridSlamProcessor::Particle>::const_iterator it = gsp_->getParticles().begin();
+      it != gsp_->getParticles().end();
+      ++it)
+  {
+    weight_total += it->weight;
+  }
+  double entropy = 0.0;
+  for(std::vector<GMapping::GridSlamProcessor::Particle>::const_iterator it = gsp_->getParticles().begin();
+      it != gsp_->getParticles().end();
+      ++it)
+  {
+    if(it->weight/weight_total > 0.0)
+      entropy += it->weight/weight_total * log(it->weight/weight_total);
+  }
+  return -entropy;
+}
+
 void
 SlamGMapping::updateMap(const sensor_msgs::LaserScan& scan)
 {
@@ -496,6 +520,10 @@ SlamGMapping::updateMap(const sensor_msgs::LaserScan& scan)
 
   GMapping::GridSlamProcessor::Particle best =
           gsp_->getParticles()[gsp_->getBestParticleIndex()];
+  std_msgs::Float64 entropy;
+  entropy.data = computePoseEntropy();
+  if(entropy.data > 0.0)
+    entropy_publisher_.publish(entropy);
 
   if(!got_map_) {
     map_.map.info.resolution = delta_;
@@ -562,17 +590,15 @@ SlamGMapping::updateMap(const sensor_msgs::LaserScan& scan)
     {
       /// @todo Sort out the unknown vs. free vs. obstacle thresholding
       GMapping::IntPoint p(x, y);
-//      double entropy = smap.cell(p).entropy();
-//      int e = (int)round(entropy * 140);
-//      if (e != 97)
-//        printf("entropy: %f %d\n", entropy, e);
-//      map_.map.data[MAP_IDX(map_.map.width, x, y)] = (int)round(entropy * 140);
       double occ=smap.cell(p);
       assert(occ <= 1.0);
       if(occ < 0)
         map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = -1;
-      else if(occ > 0.1)
-        map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = (int)round(occ*100.0);
+      else if(occ > occ_thresh_)
+      {
+        //map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = (int)round(occ*100.0);
+        map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = 100;
+      }
       else
         map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = 0;
     }
