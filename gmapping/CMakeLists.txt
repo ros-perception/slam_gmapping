@@ -20,6 +20,6 @@ rosbuild_add_gtest_build_flags(test/rtest)
 
 # Need to make the tests more robust; currently the output map can differ
 # substantially between runs.
-rosbuild_download_test_data(http://pr.willowgarage.com/data/gmapping/basic_localization_stage.bag test/basic_localization_stage.bag 16735ad0261cbd67490dcef778e19db7)
+rosbuild_download_test_data(http://pr.willowgarage.com/data/gmapping/basic_localization_stage_indexed.bag test/basic_localization_stage_indexed.bag 322a0014f47bcfbb0ad16a317738b0dc)
 #rosbuild_download_test_data(http://pr.willowgarage.com/data/gmapping/basic_localization_stage_groundtruth.pgm test/basic_localization_stage_groundtruth.pgm abf208f721053915145215b18c98f9b3)
 rosbuild_add_rostest(test/basic_localization_stage.launch)

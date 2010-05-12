@@ -1,7 +1,7 @@
 <launch>
   <param name="/use_sim_time" value="true"/>
   <node pkg="rosrecord" type="rosplay" name="rosplay"
-        args="-s 5 -r 1 -b 10 $(find gmapping)/test/basic_localization_stage.bag"/>
+        args="-s 5 -r 1 -b 10 $(find gmapping)/test/basic_localization_stage_indexed.bag"/>
   <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen">
     <remap from="scan" to="base_scan"/>
   </node>
