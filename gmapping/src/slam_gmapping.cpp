@@ -53,7 +53,6 @@ Reads the following parameters from the parameter server
 
 Parameters used by our GMapping wrapper:
 
-- @b "~inverted_laser" : @b [bool] specifies if the laser is mounted upside-down
 - @b "~throttle_scans": @b [int] throw away every nth laser scan
 - @b "~base_frame": @b [string] the tf frame_id to use for the robot base pose
 - @b "~map_frame": @b [string] the tf frame_id where the robot pose on the map is published
@@ -145,8 +144,6 @@ SlamGMapping::SlamGMapping():
   ros::NodeHandle private_nh_("~");
 
   // Parameters used by our GMapping wrapper
-  if(!private_nh_.getParam("inverted_laser", inverted_laser_))
-    inverted_laser_ = false;
   if(!private_nh_.getParam("throttle_scans", throttle_scans_))
     throttle_scans_ = 1;
   if(!private_nh_.getParam("base_frame", base_frame_))
