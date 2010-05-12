@@ -136,6 +136,7 @@ SlamGMapping::SlamGMapping():
   ROS_ASSERT(tfB_);
 
   gsp_laser_ = NULL;
+  gsp_laser_angle_increment_ = 0.0;
   gsp_odom_ = NULL;
 
   got_first_scan_ = false;
@@ -313,7 +314,32 @@ SlamGMapping::initMapper(const sensor_msgs::LaserScan& scan)
             laser_pose.getOrigin().x(),
             laser_pose.getOrigin().y(),
             yaw);
+  
+  // To account for lasers that are mounted upside-down, we determine the
+  // min, max, and increment angles of the laser in the base frame.
+  tf::Quaternion q;
+  q.setRPY(0.0, 0.0, scan.angle_min);
+  tf::Stamped<tf::Quaternion> min_q(q, scan.header.stamp,
+                                    scan.header.frame_id);
+  q.setRPY(0.0, 0.0, scan.angle_max);
+  tf::Stamped<tf::Quaternion> max_q(q, scan.header.stamp,
+                                    scan.header.frame_id);
+  try
+  {
+    tf_.transformQuaternion(base_frame_, min_q, min_q);
+    tf_.transformQuaternion(base_frame_, max_q, max_q);
+  }
+  catch(tf::TransformException& e)
+  {
+    ROS_WARN("Unable to transform min/max laser angles into base frame: %s",
+             e.what());
+    return false;
+  }
 
+  double angle_min = tf::getYaw(min_q);
+  double angle_max = tf::getYaw(max_q);
+  gsp_laser_angle_increment_ = (angle_max - angle_min) / scan.ranges.size();
+  ROS_DEBUG("Laser angles in base frame: min: %.3f max: %.3f inc: %.3f", angle_min, angle_max, gsp_laser_angle_increment_);
 
   // setting maxRange and maxUrange here so we can set a reasonable default
   ros::NodeHandle private_nh_("~");
@@ -322,10 +348,14 @@ SlamGMapping::initMapper(const sensor_msgs::LaserScan& scan)
   if(!private_nh_.getParam("maxUrange", maxUrange_))
     maxUrange_ = maxRange_;
 
-  // The laser must be called "FLASER"
+  // The laser must be called "FLASER".
+  // We pass in the absolute value of the computed angle increment, on the
+  // assumption that GMapping requires a positive angle increment.  If the
+  // actual increment is negative, we'll swap the order of ranges before
+  // feeding each scan to GMapping.
   gsp_laser_ = new GMapping::RangeSensor("FLASER",
                                          scan.ranges.size(),
-                                         scan.angle_increment,
+                                         fabs(gsp_laser_angle_increment_),
                                          gmap_pose,
                                          0.0,
                                          maxRange_);
@@ -378,8 +408,11 @@ SlamGMapping::addScan(const sensor_msgs::LaserScan& scan, GMapping::OrientedPoin
 
   // GMapping wants an array of doubles...
   double* ranges_double = new double[scan.ranges.size()];
-  if (inverted_laser_) 
+  // If the angle increment is negative, then we conclude that the laser is
+  // upside down, and invert the order of the readings.
+  if (gsp_laser_angle_increment_ < 0)
   {
+    ROS_DEBUG("Inverting scan");
     int num_ranges = scan.ranges.size();
     for(int i=0; i < num_ranges; i++)
     {

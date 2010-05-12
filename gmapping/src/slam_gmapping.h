@@ -56,6 +56,7 @@ class SlamGMapping
 
     GMapping::GridSlamProcessor* gsp_;
     GMapping::RangeSensor* gsp_laser_;
+    double gsp_laser_angle_increment_;
     GMapping::OdometrySensor* gsp_odom_;
 
     bool inverted_laser_;
