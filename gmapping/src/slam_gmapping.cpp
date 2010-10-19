@@ -567,7 +567,7 @@ SlamGMapping::updateMap(const sensor_msgs::LaserScan& scan)
   } 
 
   GMapping::Point center;
-  center.x=(xmin_ + ymax_) / 2.0;
+  center.x=(xmin_ + xmax_) / 2.0;
   center.y=(ymin_ + ymax_) / 2.0;
 
   GMapping::ScanMatcherMap smap(center, xmin_, ymin_, xmax_, ymax_, 
