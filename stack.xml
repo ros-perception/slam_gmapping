@@ -11,6 +11,7 @@
   <depend stack="common_msgs" /> <!-- nav_msgs -->
   <depend stack="geometry" /> <!-- tf -->
   <depend stack="navigation" /> <!-- map_server -->
-  <depend stack="ros" /> <!-- rosconsole, std_msgs, roscpp, message_filters -->
+  <depend stack="ros" />
+  <depend stack="ros_comm" /> <!-- rosconsole, std_msgs, roscpp, message_filters -->
 
 </stack>
