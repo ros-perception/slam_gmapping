@@ -15,8 +15,9 @@ rosbuild_add_executable(bin/slam_gmapping src/slam_gmapping.cpp src/main.cpp)
 target_link_libraries(bin/slam_gmapping gridfastslam sensor_odometry sensor_range utils scanmatcher)
 #rosbuild_add_executable(tftest src/tftest.cpp)
 
-rosbuild_add_executable(test/rtest test/rtest.cpp)
+rosbuild_add_executable(test/rtest EXCLUDE_FROM_ALL test/rtest.cpp)
 rosbuild_add_gtest_build_flags(test/rtest)
+rosbuild_declare_test(test/rtest)
 
 # Need to make the tests more robust; currently the output map can differ
 # substantially between runs.
