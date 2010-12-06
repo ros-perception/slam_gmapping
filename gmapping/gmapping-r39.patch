@@ -69,9 +69,10 @@ Index: gridfastslam/gridslamprocessor.cpp
 -    // process a scan only if the robot has traveled a given distance
 +    // process a scan only if the robot has traveled a given distance or a certain amount of time has elapsed
      if (! m_count 
- 	|| m_linearDistance>m_linearThresholdDistance 
+-	|| m_linearDistance>m_linearThresholdDistance 
 -	|| m_angularDistance>m_angularThresholdDistance){
-+	|| m_angularDistance>m_angularThresholdDistance
++	|| m_linearDistance>=m_linearThresholdDistance 
++	|| m_angularDistance>=m_angularThresholdDistance
 +  || (period_ >= 0.0 && (reading.getTime() - last_update_time_) > period_)){
 +      last_update_time_ = reading.getTime();
        
@@ -373,6 +374,95 @@ Index: scanmatcher/scanmatcher.cpp
  
  #include "scanmatcher.h"
  #include "gridlinetraversal.h"
+@@ -44,8 +46,14 @@
+ 	m_lasamplestep=0.01;
+ 	m_generateMap=false;
+ */
++
++	m_linePoints = new IntPoint[20000];
+ }
+ 
++ScanMatcher::~ScanMatcher(){
++	delete [] m_linePoints;
++}
++
+ void ScanMatcher::invalidateActiveArea(){
+ 	m_activeAreaComputed=false;
+ }
+@@ -125,7 +133,7 @@
+ 	/*determine the size of the area*/
+ 	const double * angle=m_laserAngles+m_initialBeamsSkip;
+ 	for (const double* r=readings+m_initialBeamsSkip; r<readings+m_laserBeams; r++, angle++){
+-		if (*r>m_laserMaxRange) continue;
++		if (*r>m_laserMaxRange||*r==0.0) continue;
+ 		double d=*r>m_usableRange?m_usableRange:*r;
+ 		Point phit=lp;
+ 		phit.x+=d*cos(lp.theta+*angle);
+@@ -157,22 +165,21 @@
+ 	for (const double* r=readings+m_initialBeamsSkip; r<readings+m_laserBeams; r++, angle++)
+ 		if (m_generateMap){
+ 			double d=*r;
+-			if (d>m_laserMaxRange)
++			if (d>m_laserMaxRange||d==0.0)
+ 				continue;
+ 			if (d>m_usableRange)
+ 				d=m_usableRange;
+ 			Point phit=lp+Point(d*cos(lp.theta+*angle),d*sin(lp.theta+*angle));
+ 			IntPoint p0=map.world2map(lp);
+ 			IntPoint p1=map.world2map(phit);
+-			
+-			IntPoint linePoints[20000] ;
++
+ 			GridLineTraversalLine line;
+-			line.points=linePoints;
++			line.points=m_linePoints;
+ 			GridLineTraversal::gridLine(p0, p1, &line);
+ 			for (int i=0; i<line.num_points-1; i++){
+-				assert(map.isInside(linePoints[i]));
+-				activeArea.insert(map.storage().patchIndexes(linePoints[i]));
+-				assert(linePoints[i].x>=0 && linePoints[i].y>=0);
++				assert(map.isInside(m_linePoints[i]));
++				activeArea.insert(map.storage().patchIndexes(m_linePoints[i]));
++				assert(m_linePoints[i].x>=0 && m_linePoints[i].y>=0);
+ 			}
+ 			if (d<m_usableRange){
+ 				IntPoint cp=map.storage().patchIndexes(p1);
+@@ -180,7 +187,7 @@
+ 				activeArea.insert(cp);
+ 			}
+ 		} else {
+-			if (*r>m_laserMaxRange||*r>m_usableRange) continue;
++			if (*r>m_laserMaxRange||*r>m_usableRange||*r==0.0) continue;
+ 			Point phit=lp;
+ 			phit.x+=*r*cos(lp.theta+*angle);
+ 			phit.y+=*r*sin(lp.theta+*angle);
+@@ -223,15 +230,14 @@
+ 	for (const double* r=readings+m_initialBeamsSkip; r<readings+m_laserBeams; r++, angle++)
+ 		if (m_generateMap){
+ 			double d=*r;
+-			if (d>m_laserMaxRange)
++			if (d>m_laserMaxRange||d==0.0)
+ 				continue;
+ 			if (d>m_usableRange)
+ 				d=m_usableRange;
+ 			Point phit=lp+Point(d*cos(lp.theta+*angle),d*sin(lp.theta+*angle));
+ 			IntPoint p1=map.world2map(phit);
+-			IntPoint linePoints[20000] ;
+ 			GridLineTraversalLine line;
+-			line.points=linePoints;
++			line.points=m_linePoints;
+ 			GridLineTraversal::gridLine(p0, p1, &line);
+ 			for (int i=0; i<line.num_points-1; i++){
+ 				PointAccumulator& cell=map.cell(line.points[i]);
+@@ -247,7 +253,7 @@
+ 				esum+=e;
+ 			}
+ 		} else {
+-			if (*r>m_laserMaxRange||*r>m_usableRange) continue;
++			if (*r>m_laserMaxRange||*r>m_usableRange||*r==0.0) continue;
+ 			Point phit=lp;
+ 			phit.x+=*r*cos(lp.theta+*angle);
+ 			phit.y+=*r*sin(lp.theta+*angle);
 Index: scanmatcher/scanmatcher.h
 ===================================================================
 --- scanmatcher/scanmatcher.h	(revision 39)
@@ -386,6 +476,52 @@ Index: scanmatcher/scanmatcher.h
  
  namespace GMapping {
  
+@@ -16,6 +16,7 @@
+ 		typedef Covariance3 CovarianceMatrix;
+ 		
+ 		ScanMatcher();
++		~ScanMatcher();
+ 		double icpOptimize(OrientedPoint& pnew, const ScanMatcherMap& map, const OrientedPoint& p, const double* readings) const;
+ 		double optimize(OrientedPoint& pnew, const ScanMatcherMap& map, const OrientedPoint& p, const double* readings) const;
+ 		double optimize(OrientedPoint& mean, CovarianceMatrix& cov, const ScanMatcherMap& map, const OrientedPoint& p, const double* readings) const;
+@@ -44,6 +45,7 @@
+ 		/**laser parameters*/
+ 		unsigned int m_laserBeams;
+ 		double       m_laserAngles[LASER_MAXBEAMS];
++		
+ 		//OrientedPoint m_laserPose;
+ 		PARAM_SET_GET(OrientedPoint, laserPose, protected, public, public)
+ 		PARAM_SET_GET(double, laserMaxRange, protected, public, public)
+@@ -67,6 +69,9 @@
+ 		PARAM_SET_GET(double, linearOdometryReliability, protected, public, public)
+ 		PARAM_SET_GET(double, freeCellRatio, protected, public, public)
+ 		PARAM_SET_GET(unsigned int, initialBeamsSkip, protected, public, public)
++
++		// allocate this large array only once
++		IntPoint* m_linePoints;
+ };
+ 
+ inline double ScanMatcher::icpStep(OrientedPoint & pret, const ScanMatcherMap& map, const OrientedPoint& p, const double* readings) const{
+@@ -82,8 +87,7 @@
+ 	for (const double* r=readings+m_initialBeamsSkip; r<readings+m_laserBeams; r++, angle++){
+ 		skip++;
+ 		skip=skip>m_likelihoodSkip?0:skip;
+-		if (*r>m_usableRange) continue;
+-		if (skip) continue;
++		if (skip||*r>m_usableRange||*r==0.0) continue;
+ 		Point phit=lp;
+ 		phit.x+=*r*cos(lp.theta+*angle);
+ 		phit.y+=*r*sin(lp.theta+*angle);
+@@ -148,8 +152,7 @@
+ 	for (const double* r=readings+m_initialBeamsSkip; r<readings+m_laserBeams; r++, angle++){
+ 		skip++;
+ 		skip=skip>m_likelihoodSkip?0:skip;
+-		if (*r>m_usableRange) continue;
+-		if (skip) continue;
++		if (skip||*r>m_usableRange||*r==0.0) continue;
+ 		Point phit=lp;
+ 		phit.x+=*r*cos(lp.theta+*angle);
+ 		phit.y+=*r*sin(lp.theta+*angle);
 Index: configfile/configfile_test.cpp
 ===================================================================
 --- configfile/configfile_test.cpp	(revision 39)
