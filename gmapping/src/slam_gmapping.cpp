@@ -332,6 +332,8 @@ SlamGMapping::initMapper(const sensor_msgs::LaserScan& scan)
              e.what());
     return false;
   }
+  
+  gsp_laser_beam_count_ = scan.ranges.size();
 
   double angle_min = tf::getYaw(min_q);
   double angle_max = tf::getYaw(max_q);
@@ -351,7 +353,7 @@ SlamGMapping::initMapper(const sensor_msgs::LaserScan& scan)
   // actual increment is negative, we'll swap the order of ranges before
   // feeding each scan to GMapping.
   gsp_laser_ = new GMapping::RangeSensor("FLASER",
-                                         scan.ranges.size(),
+                                         gsp_laser_beam_count_,
                                          fabs(gsp_laser_angle_increment_),
                                          gmap_pose,
                                          0.0,
@@ -402,6 +404,9 @@ SlamGMapping::addScan(const sensor_msgs::LaserScan& scan, GMapping::OrientedPoin
 {
   if(!getOdomPose(gmap_pose, scan.header.stamp))
      return false;
+  
+  if(scan.ranges.size() != gsp_laser_beam_count_)
+    return false;
 
   // GMapping wants an array of doubles...
   double* ranges_double = new double[scan.ranges.size()];

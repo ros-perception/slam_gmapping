@@ -1,0 +1,11 @@
+<launch>
+  <param name="/use_sim_time" value="true"/>
+  <node pkg="rosrecord" type="rosplay" name="rosplay"
+        args="-s 5 -r 1 -b 10 $(find gmapping)/test/hallway_slow_2011-03-04-21-41-33.bag"/>
+  <node pkg="gmapping" type="slam_gmapping" name="slam_gmapping" output="screen">
+    <remap from="scan" to="base_laser1_scan"/>
+  </node>
+  <!--test time-limit="180" test-name="basic_localization_stage" pkg="gmapping" 
+        type="test_map.py" args="90.0"/-->
+  <test time-limit="180" test-name="map_data_different_beamcount_test" pkg="gmapping" type="rtest" args="90.0 0.05 4000 4000 0.002 0.005"/>
+</launch>
