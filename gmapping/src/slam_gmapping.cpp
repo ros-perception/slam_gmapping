@@ -536,7 +536,10 @@ SlamGMapping::updateMap(const sensor_msgs::LaserScan& scan)
   double theta = scan.angle_min;
   for(unsigned int i=0; i<scan.ranges.size(); i++)
   {
-    laser_angles[i]=theta;
+    if (gsp_laser_angle_increment_ < 0)
+        laser_angles[scan.ranges.size()-i-1]=theta;
+    else
+        laser_angles[i]=theta;
     theta += scan.angle_increment;
   }
 
