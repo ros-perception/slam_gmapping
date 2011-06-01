@@ -337,7 +337,7 @@ SlamGMapping::initMapper(const sensor_msgs::LaserScan& scan)
 
   double angle_min = tf::getYaw(min_q);
   double angle_max = tf::getYaw(max_q);
-  gsp_laser_angle_increment_ = (angle_max - angle_min) / scan.ranges.size();
+  gsp_laser_angle_increment_ = scan.angle_increment;
   ROS_DEBUG("Laser angles in base frame: min: %.3f max: %.3f inc: %.3f", angle_min, angle_max, gsp_laser_angle_increment_);
 
   // setting maxRange and maxUrange here so we can set a reasonable default
