@@ -13,6 +13,7 @@ Brian Gerkey</author>
 <review status="API cleared, doc cleared" notes=""/>
 <url>http://openslam.org/</url>
   <depend package="roscpp"/>
+  <depend package="rosbag"/>
   <depend package="rosconsole"/>
   <depend package="std_msgs"/>
   <depend package="nav_msgs"/>
