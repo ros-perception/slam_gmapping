@@ -262,9 +262,9 @@ bool
 SlamGMapping::getOdomPose(GMapping::OrientedPoint& gmap_pose, const ros::Time& t)
 {
   // Get the robot's pose
-  tf::Stamped<tf::Pose> ident (btTransform(tf::createQuaternionFromRPY(0,0,0),
-                                           btVector3(0,0,0)), t, base_frame_);
-  tf::Stamped<btTransform> odom_pose;
+  tf::Stamped<tf::Pose> ident (tf::Transform(tf::createQuaternionFromRPY(0,0,0),
+                                           tf::Vector3(0,0,0)), t, base_frame_);
+  tf::Stamped<tf::Transform> odom_pose;
   try
   {
     tf_.transformPose(odom_frame_, ident, odom_pose);
@@ -287,7 +287,7 @@ SlamGMapping::initMapper(const sensor_msgs::LaserScan& scan)
 {
   // Get the laser's pose, relative to base.
   tf::Stamped<tf::Pose> ident;
-  tf::Stamped<btTransform> laser_pose;
+  tf::Stamped<tf::Transform> laser_pose;
   ident.setIdentity();
   ident.frame_id_ = scan.header.frame_id;
   ident.stamp_ = scan.header.stamp;
@@ -488,8 +488,8 @@ SlamGMapping::laserCallback(const sensor_msgs::LaserScan::ConstPtr& scan)
     tf::Stamped<tf::Pose> odom_to_map;
     try
     {
-      tf_.transformPose(odom_frame_,tf::Stamped<tf::Pose> (btTransform(tf::createQuaternionFromRPY(0, 0, mpose.theta),
-                                                                    btVector3(mpose.x, mpose.y, 0.0)).inverse(),
+      tf_.transformPose(odom_frame_,tf::Stamped<tf::Pose> (tf::Transform(tf::createQuaternionFromRPY(0, 0, mpose.theta),
+                                                                    tf::Vector3(mpose.x, mpose.y, 0.0)).inverse(),
                                                                     scan->header.stamp, base_frame_),odom_to_map);
     }
     catch(tf::TransformException e){
