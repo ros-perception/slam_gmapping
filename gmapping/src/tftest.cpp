@@ -25,7 +25,7 @@ class Test
     {
       // Get the robot's pose 
       tf::Stamped<tf::Pose> ident;
-      tf::Stamped<btTransform> odom_pose;
+      tf::Stamped<tf::Transform> odom_pose;
       ident.setIdentity();
       ident.frame_id_ = "base";
       ident.stamp_ = scan_.header.stamp;
@@ -39,7 +39,7 @@ class Test
         return;
       }
       double yaw,pitch,roll;
-      btMatrix3x3 mat =  odom_pose.getBasis();
+      tf::Matrix3x3 mat =  odom_pose.getBasis();
       mat.getEulerZYX(yaw, pitch, roll);
 
       printf("%f: %.6f %.6f %.6f\n",
