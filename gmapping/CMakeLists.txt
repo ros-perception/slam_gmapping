@@ -9,10 +9,13 @@ if(_make_failed)
   message(FATAL_ERROR "Build of GMapping failed")
 endif(_make_failed)
 
+rosbuild_add_boost_directories()
+
 include_directories(include include/gmapping)
 link_directories(${PROJECT_SOURCE_DIR}/lib)
 rosbuild_add_executable(bin/slam_gmapping src/slam_gmapping.cpp src/main.cpp)
 target_link_libraries(bin/slam_gmapping gridfastslam sensor_odometry sensor_range utils scanmatcher)
+rosbuild_link_boost(bin/slam_gmapping signals)
 #rosbuild_add_executable(tftest src/tftest.cpp)
 
 rosbuild_add_executable(test/rtest EXCLUDE_FROM_ALL test/rtest.cpp)
