@@ -12,9 +12,10 @@ MD5SUM_FILE = $(FILENAME).md5sum
 include $(shell rospack find mk)/download_unpack_build.mk
 
 PATCH = gmapping-r39.patch
+PATCH2 = gmapping-r39-2.patch
 
-installed: wiped $(SOURCE_DIR)/unpacked
-	cd $(SOURCE_DIR) && patch -p0 < ../../$(PATCH) && ./configure
+installed: $(SOURCE_DIR)/unpacked
+	cd $(SOURCE_DIR) && patch -p0 < ../../$(PATCH) && patch -p0 < ../../$(PATCH2) && ./configure
 	cd $(SOURCE_DIR) && make
 	# Poor-man's install step
 	mkdir -p lib
