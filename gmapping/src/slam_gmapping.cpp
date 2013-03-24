@@ -217,6 +217,9 @@ SlamGMapping::SlamGMapping():
     lasamplerange_ = 0.005;
   if(!private_nh_.getParam("lasamplestep", lasamplestep_))
     lasamplestep_ = 0.005;
+    
+  if(!private_nh_.getParam("tf_delay", tf_delay_))
+    tf_delay_ = transform_publish_period;
 
   entropy_publisher_ = private_nh_.advertise<std_msgs::Float64>("entropy", 1, true);
   sst_ = node_.advertise<nav_msgs::OccupancyGrid>("map", 1, true);
@@ -668,7 +671,7 @@ SlamGMapping::mapCallback(nav_msgs::GetMap::Request  &req,
 void SlamGMapping::publishTransform()
 {
   map_to_odom_mutex_.lock();
-  ros::Time tf_expiration = ros::Time::now() + ros::Duration(0.05);
+  ros::Time tf_expiration = ros::Time::now() + ros::Duration(tf_delay_);
   tfB_->sendTransform( tf::StampedTransform (map_to_odom_, ros::Time::now(), map_frame_, odom_frame_));
   map_to_odom_mutex_.unlock();
 }
