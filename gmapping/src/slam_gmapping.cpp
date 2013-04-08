@@ -645,7 +645,18 @@ SlamGMapping::updateMap(const sensor_msgs::LaserScan& scan)
 
   //make sure to set the header information on the map
   map_.map.header.stamp = ros::Time::now();
-  map_.map.header.frame_id = map_frame_;
+
+  // prepend the tf_prefix if necessary
+  if(map_frame_[0] != '/')
+  {
+    tf::TransformListener tfL;
+    map_.map.header.frame_id = std::string("/") + tfL.getTFPrefix() + "/" + map_frame_;
+  }
+  else
+  {
+    map_.map.header.frame_id = map_frame_;
+  }
+
 
   sst_.publish(map_.map);
   sstm_.publish(map_.map.info);
