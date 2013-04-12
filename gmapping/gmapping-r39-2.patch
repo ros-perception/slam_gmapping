@@ -1,6 +1,5 @@
-diff -rupN gmapping_export_old/gridfastslam/gfs2rec.cpp gmapping_export/gridfastslam/gfs2rec.cpp
---- ./gridfastslam/gfs2rec.cpp	2012-05-02 17:12:38.200325749 -0700
-+++ ../../gmapping_export/gridfastslam/gfs2rec.cpp	2012-05-02 17:19:34.860308323 -0700
+--- gridfastslam/gfs2rec.cpp	2012-05-02 17:12:38.200325749 -0700
++++ gridfastslam/gfs2rec.cpp	2012-05-02 17:19:34.860308323 -0700
 @@ -145,9 +145,9 @@ struct ResampleRecord: public Record{
  	virtual void read(istream& is){
  		is >> dim;
