@@ -117,4 +117,6 @@ class SlamGMapping
     double llsamplestep_;
     double lasamplerange_;
     double lasamplestep_;
+    
+    double tf_delay_;
 };
