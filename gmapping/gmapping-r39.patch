@@ -1,6 +1,5 @@
-diff -ur ./build_tools/Makefile.generic-shared-object ../../gmapping_export/build_tools/Makefile.generic-shared-object
---- ./build_tools/Makefile.generic-shared-object	2007-01-15 03:28:18.000000000 -0800
-+++ ../../gmapping_export/build_tools/Makefile.generic-shared-object	2011-10-24 14:51:15.026987299 -0700
+--- build_tools/Makefile.generic-shared-object	2007-01-15 03:28:18.000000000 -0800
++++ build_tools/Makefile.generic-shared-object	2011-10-24 14:51:15.026987299 -0700
 @@ -35,14 +35,14 @@
  	@$(PRETTY) "$(CXX) $(LDFLAGS)  -dynamiclib $(OBJS) $(COBJS) -L$(LIBDIR) $(LIBS) -install_name $@ -o $@"
  endif
@@ -18,9 +17,8 @@ diff -ur ./build_tools/Makefile.generic-shared-object ../../gmapping_export/buil
  
  #Generazione dei moc files
  moc_%.cpp:              %.h
-diff -ur ./configfile/configfile.cpp ../../gmapping_export/configfile/configfile.cpp
---- ./configfile/configfile.cpp	2007-09-07 01:56:13.000000000 -0700
-+++ ../../gmapping_export/configfile/configfile.cpp	2011-10-24 14:39:43.453237441 -0700
+--- configfile/configfile.cpp	2007-09-07 01:56:13.000000000 -0700
++++ configfile/configfile.cpp	2011-10-24 14:39:43.453237441 -0700
 @@ -30,6 +30,7 @@
  #include <sstream>
  #include <iostream>
@@ -29,9 +27,8 @@ diff -ur ./configfile/configfile.cpp ../../gmapping_export/configfile/configfile
  
  namespace GMapping{
  using namespace std;
-diff -ur ./configfile/configfile_test.cpp ../../gmapping_export/configfile/configfile_test.cpp
---- ./configfile/configfile_test.cpp	2007-09-07 01:56:13.000000000 -0700
-+++ ../../gmapping_export/configfile/configfile_test.cpp	2011-10-24 14:39:43.453237441 -0700
+--- configfile/configfile_test.cpp	2007-09-07 01:56:13.000000000 -0700
++++ configfile/configfile_test.cpp	2011-10-24 14:39:43.453237441 -0700
 @@ -23,6 +23,7 @@
  
  
@@ -40,9 +37,8 @@ diff -ur ./configfile/configfile_test.cpp ../../gmapping_export/configfile/confi
  #include "configfile.h"
  
  using namespace std;
-diff -ur ./grid/harray2d.h ../../gmapping_export/grid/harray2d.h
---- ./grid/harray2d.h	2007-08-27 08:29:07.000000000 -0700
-+++ ../../gmapping_export/grid/harray2d.h	2011-10-24 14:39:43.413237311 -0700
+--- grid/harray2d.h	2007-08-27 08:29:07.000000000 -0700
++++ grid/harray2d.h	2011-10-24 14:39:43.413237311 -0700
 @@ -137,10 +137,12 @@
  template <class Cell>
  AccessibilityState  HierarchicalArray2D<Cell>::cellState(int x, int y) const {
@@ -56,9 +52,8 @@ diff -ur ./grid/harray2d.h ../../gmapping_export/grid/harray2d.h
  	return Outside;
  }
  
-diff -ur ./gridfastslam/gfs2log.cpp ../../gmapping_export/gridfastslam/gfs2log.cpp
---- ./gridfastslam/gfs2log.cpp	2007-01-15 03:28:18.000000000 -0800
-+++ ../../gmapping_export/gridfastslam/gfs2log.cpp	2011-10-24 14:39:43.393237444 -0700
+--- gridfastslam/gfs2log.cpp	2007-01-15 03:28:18.000000000 -0800
++++ gridfastslam/gfs2log.cpp	2011-10-24 14:39:43.393237444 -0700
 @@ -3,6 +3,7 @@
  #include <sstream>
  #include <vector>
@@ -76,9 +71,8 @@ diff -ur ./gridfastslam/gfs2log.cpp ../../gmapping_export/gridfastslam/gfs2log.c
  	if (argc<3){
  		cout << "usage gfs2log [-err] [-neff] [-part] [-odom] <infilename> <outfilename>" << endl;
  		cout << "  -odom : dump raw odometry in ODOM message instead of inpolated corrected one" << endl;
-diff -ur ./gridfastslam/gfs2neff.cpp ../../gmapping_export/gridfastslam/gfs2neff.cpp
---- ./gridfastslam/gfs2neff.cpp	2007-01-15 03:28:18.000000000 -0800
-+++ ../../gmapping_export/gridfastslam/gfs2neff.cpp	2011-10-24 14:39:43.383237845 -0700
+--- gridfastslam/gfs2neff.cpp	2007-01-15 03:28:18.000000000 -0800
++++ gridfastslam/gfs2neff.cpp	2011-10-24 14:39:43.383237845 -0700
 @@ -4,7 +4,7 @@
  
  using namespace std;
@@ -88,9 +82,8 @@ diff -ur ./gridfastslam/gfs2neff.cpp ../../gmapping_export/gridfastslam/gfs2neff
  	if (argc<3){
  		cout << "usage gfs2neff <infilename> <nefffilename>" << endl;
  		return -1;
-diff -ur ./gridfastslam/gfs2rec.cpp ../../gmapping_export/gridfastslam/gfs2rec.cpp
---- ./gridfastslam/gfs2rec.cpp	2007-01-15 03:28:18.000000000 -0800
-+++ ../../gmapping_export/gridfastslam/gfs2rec.cpp	2011-10-24 14:39:43.403237397 -0700
+--- gridfastslam/gfs2rec.cpp	2007-01-15 03:28:18.000000000 -0800
++++ gridfastslam/gfs2rec.cpp	2011-10-24 14:39:43.403237397 -0700
 @@ -3,6 +3,7 @@
  #include <sstream>
  #include <vector>
@@ -108,9 +101,8 @@ diff -ur ./gridfastslam/gfs2rec.cpp ../../gmapping_export/gridfastslam/gfs2rec.c
  	if (argc<3){
  		cout << "usage gfs2rec [-err] <infilename> <outfilename>" << endl;
  		return -1;
-diff -ur ./gridfastslam/gfsreader.cpp ../../gmapping_export/gridfastslam/gfsreader.cpp
---- ./gridfastslam/gfsreader.cpp	2008-07-09 03:25:13.000000000 -0700
-+++ ../../gmapping_export/gridfastslam/gfsreader.cpp	2011-10-24 14:39:43.393237444 -0700
+--- gridfastslam/gfsreader.cpp	2008-07-09 03:25:13.000000000 -0700
++++ gridfastslam/gfsreader.cpp	2011-10-24 14:39:43.393237444 -0700
 @@ -1,6 +1,7 @@
  #include "gfsreader.h"
  #include <iomanip>
@@ -119,9 +111,8 @@ diff -ur ./gridfastslam/gfsreader.cpp ../../gmapping_export/gridfastslam/gfsread
  
  namespace  GMapping { 
  
-diff -ur ./gridfastslam/gridslamprocessor.cpp ../../gmapping_export/gridfastslam/gridslamprocessor.cpp
---- ./gridfastslam/gridslamprocessor.cpp	2007-08-27 08:29:07.000000000 -0700
-+++ ../../gmapping_export/gridfastslam/gridslamprocessor.cpp	2011-10-24 14:39:43.393237444 -0700
+--- gridfastslam/gridslamprocessor.cpp	2007-08-27 08:29:07.000000000 -0700
++++ gridfastslam/gridslamprocessor.cpp	2011-10-24 14:39:43.393237444 -0700
 @@ -19,13 +19,16 @@
  
    GridSlamProcessor::GridSlamProcessor(): m_infoStream(cout){
@@ -208,9 +199,8 @@ diff -ur ./gridfastslam/gridslamprocessor.cpp ../../gmapping_export/gridfastslam
  	}
        }
        //		cerr  << "Tree: normalizing, resetting and propagating weights at the end..." ;
-diff -ur ./gridfastslam/gridslamprocessor.h ../../gmapping_export/gridfastslam/gridslamprocessor.h
---- ./gridfastslam/gridslamprocessor.h	2007-08-27 08:29:07.000000000 -0700
-+++ ../../gmapping_export/gridfastslam/gridslamprocessor.h	2011-10-24 14:39:43.393237444 -0700
+--- gridfastslam/gridslamprocessor.h	2007-08-27 08:29:07.000000000 -0700
++++ gridfastslam/gridslamprocessor.h	2011-10-24 14:39:43.393237444 -0700
 @@ -148,6 +148,7 @@
  			       int iterations, double likelihoodSigma=1, double likelihoodGain=1, unsigned int likelihoodSkip=0);
      void setMotionModelParameters(double srr, double srt, double str, double stt);
@@ -238,9 +228,8 @@ diff -ur ./gridfastslam/gridslamprocessor.h ../../gmapping_export/gridfastslam/g
      
      
      /**the particles*/
-diff -ur ./gridfastslam/gridslamprocessor.hxx ../../gmapping_export/gridfastslam/gridslamprocessor.hxx
---- ./gridfastslam/gridslamprocessor.hxx	2007-08-27 08:29:07.000000000 -0700
-+++ ../../gmapping_export/gridfastslam/gridslamprocessor.hxx	2011-10-24 14:39:43.403237397 -0700
+--- gridfastslam/gridslamprocessor.hxx	2007-08-27 08:29:07.000000000 -0700
++++ gridfastslam/gridslamprocessor.hxx	2011-10-24 14:39:43.403237397 -0700
 @@ -67,7 +67,7 @@
    
  }
@@ -269,18 +258,16 @@ diff -ur ./gridfastslam/gridslamprocessor.hxx ../../gmapping_export/gridfastslam
        it->node=node;
  
        //END: BUILDING TREE
-diff -ur ./gui/gfs2img.cpp ../../gmapping_export/gui/gfs2img.cpp
---- ./gui/gfs2img.cpp	2008-06-08 03:40:20.000000000 -0700
-+++ ../../gmapping_export/gui/gfs2img.cpp	2011-10-24 14:39:43.413237311 -0700
+--- gui/gfs2img.cpp	2008-06-08 03:40:20.000000000 -0700
++++ gui/gfs2img.cpp	2011-10-24 14:39:43.413237311 -0700
 @@ -1,4 +1,5 @@
  #include <limits.h>
 +#include <cstdlib>
  #include <scanmatcher/scanmatcher.h>
  #include <gridfastslam/gfsreader.h>
  #include <qpixmap.h>
-diff -ur ./log/carmenconfiguration.cpp ../../gmapping_export/log/carmenconfiguration.cpp
---- ./log/carmenconfiguration.cpp	2008-06-08 03:40:20.000000000 -0700
-+++ ../../gmapping_export/log/carmenconfiguration.cpp	2011-10-24 14:39:43.413237311 -0700
+--- log/carmenconfiguration.cpp	2008-06-08 03:40:20.000000000 -0700
++++ log/carmenconfiguration.cpp	2011-10-24 14:39:43.413237311 -0700
 @@ -2,6 +2,7 @@
  #include <iostream>
  #include <sstream>
@@ -289,9 +276,8 @@ diff -ur ./log/carmenconfiguration.cpp ../../gmapping_export/log/carmenconfigura
  #include <sys/types.h>
  #include <sensor_odometry/odometrysensor.h>
  #include <sensor_range/rangesensor.h>
-diff -ur ./log/log_plot.cpp ../../gmapping_export/log/log_plot.cpp
---- ./log/log_plot.cpp	2008-06-08 03:40:20.000000000 -0700
-+++ ../../gmapping_export/log/log_plot.cpp	2011-10-24 14:39:43.403237397 -0700
+--- log/log_plot.cpp	2008-06-08 03:40:20.000000000 -0700
++++ log/log_plot.cpp	2011-10-24 14:39:43.403237397 -0700
 @@ -1,5 +1,6 @@
  #include <fstream>
  #include <iostream>
@@ -308,9 +294,8 @@ diff -ur ./log/log_plot.cpp ../../gmapping_export/log/log_plot.cpp
    double maxrange=2.;
  	if (argc<2){
  		cout << "usage log_plot <filename> | gnuplot" << endl;
-diff -ur ./log/log_test.cpp ../../gmapping_export/log/log_test.cpp
---- ./log/log_test.cpp	2007-01-15 03:28:18.000000000 -0800
-+++ ../../gmapping_export/log/log_test.cpp	2011-10-24 14:39:43.403237397 -0700
+--- log/log_test.cpp	2007-01-15 03:28:18.000000000 -0800
++++ log/log_test.cpp	2011-10-24 14:39:43.403237397 -0700
 @@ -1,5 +1,6 @@
  #include <fstream>
  #include <iostream>
@@ -327,9 +312,8 @@ diff -ur ./log/log_test.cpp ../../gmapping_export/log/log_test.cpp
  	if (argc<2){
  		cout << "usage log_test <filename>" << endl;
  		exit (-1);
-diff -ur ./log/Makefile ../../gmapping_export/log/Makefile
---- ./log/Makefile	2007-01-15 03:28:18.000000000 -0800
-+++ ../../gmapping_export/log/Makefile	2011-10-24 14:47:04.434487440 -0700
+--- log/Makefile	2007-01-15 03:28:18.000000000 -0800
++++ log/Makefile	2011-10-24 14:47:04.434487440 -0700
 @@ -1,7 +1,7 @@
  OBJS= configuration.o carmenconfiguration.o sensorlog.o sensorstream.o
  APPS= log_test log_plot scanstudio2carmen rdk2carmen
@@ -339,9 +323,8 @@ diff -ur ./log/Makefile ../../gmapping_export/log/Makefile
  CPPFLAGS+= -I../sensor 
  
  -include ../global.mk
-diff -ur ./log/rdk2carmen.cpp ../../gmapping_export/log/rdk2carmen.cpp
---- ./log/rdk2carmen.cpp	2007-01-15 03:28:18.000000000 -0800
-+++ ../../gmapping_export/log/rdk2carmen.cpp	2011-10-24 14:39:43.413237311 -0700
+--- log/rdk2carmen.cpp	2007-01-15 03:28:18.000000000 -0800
++++ log/rdk2carmen.cpp	2011-10-24 14:39:43.413237311 -0700
 @@ -1,5 +1,6 @@
  #include <fstream>
  #include <iostream>
@@ -358,9 +341,8 @@ diff -ur ./log/rdk2carmen.cpp ../../gmapping_export/log/rdk2carmen.cpp
  	if (argc<2){
  		cerr << "usage "<<argv[0]<<" <filename> <outfilename>" << endl;
  		cerr << "or "<<argv[0]<<" <filename> for standard output" << endl;
-diff -ur ./log/scanstudio2carmen.cpp ../../gmapping_export/log/scanstudio2carmen.cpp
---- ./log/scanstudio2carmen.cpp	2007-01-15 03:28:18.000000000 -0800
-+++ ../../gmapping_export/log/scanstudio2carmen.cpp	2011-10-24 14:39:43.403237397 -0700
+--- log/scanstudio2carmen.cpp	2007-01-15 03:28:18.000000000 -0800
++++ log/scanstudio2carmen.cpp	2011-10-24 14:39:43.403237397 -0700
 @@ -1,6 +1,7 @@
  #include <iostream>
  #include <fstream>
@@ -369,9 +351,8 @@ diff -ur ./log/scanstudio2carmen.cpp ../../gmapping_export/log/scanstudio2carmen
  #include <assert.h>
  #include <utils/point.h>
  
-diff -ur ./Makefile ../../gmapping_export/Makefile
---- ./Makefile	2007-09-17 02:21:50.000000000 -0700
-+++ ../../gmapping_export/Makefile	2011-10-24 14:39:43.463237744 -0700
+--- Makefile	2007-09-17 02:21:50.000000000 -0700
++++ Makefile	2011-10-24 14:39:43.463237744 -0700
 @@ -6,7 +6,8 @@
  ifeq ($(MACOSX),1)
  SUBDIRS=utils sensor log configfile scanmatcher gridfastslam 
@@ -382,9 +363,8 @@ diff -ur ./Makefile ../../gmapping_export/Makefile
  endif
  endif
  
-diff -ur ./particlefilter/particlefilter.h ../../gmapping_export/particlefilter/particlefilter.h
---- ./particlefilter/particlefilter.h	2008-06-08 03:40:20.000000000 -0700
-+++ ../../gmapping_export/particlefilter/particlefilter.h	2011-10-24 14:39:43.453237441 -0700
+--- particlefilter/particlefilter.h	2008-06-08 03:40:20.000000000 -0700
++++ particlefilter/particlefilter.h	2011-10-24 14:39:43.453237441 -0700
 @@ -1,6 +1,7 @@
  #ifndef PARTICLEFILTER_H
  #define PARTICLEFILTER_H
@@ -403,9 +383,8 @@ diff -ur ./particlefilter/particlefilter.h ../../gmapping_export/particlefilter/
  	for (Iterator it=begin; it!=end; it++){
  		lmax=lmax>((double)(*it))? lmax: (double)(*it);
  	}
-diff -ur ./scanmatcher/gridlinetraversal.h ../../gmapping_export/scanmatcher/gridlinetraversal.h
---- ./scanmatcher/gridlinetraversal.h	2007-01-15 03:28:18.000000000 -0800
-+++ ../../gmapping_export/scanmatcher/gridlinetraversal.h	2011-10-24 14:39:43.423237582 -0700
+--- scanmatcher/gridlinetraversal.h	2007-01-15 03:28:18.000000000 -0800
++++ scanmatcher/gridlinetraversal.h	2011-10-24 14:39:43.423237582 -0700
 @@ -1,6 +1,7 @@
  #ifndef GRIDLINETRAVERSAL_H
  #define GRIDLINETRAVERSAL_H
@@ -414,9 +393,8 @@ diff -ur ./scanmatcher/gridlinetraversal.h ../../gmapping_export/scanmatcher/gri
  #include <utils/point.h>
  
  namespace GMapping {
-diff -ur ./scanmatcher/icptest.cpp ../../gmapping_export/scanmatcher/icptest.cpp
---- ./scanmatcher/icptest.cpp	2007-01-15 03:28:18.000000000 -0800
-+++ ../../gmapping_export/scanmatcher/icptest.cpp	2011-10-24 14:39:43.423237582 -0700
+--- scanmatcher/icptest.cpp	2007-01-15 03:28:18.000000000 -0800
++++ scanmatcher/icptest.cpp	2011-10-24 14:39:43.423237582 -0700
 @@ -1,5 +1,6 @@
  #include <iostream>
  #include <fstream>
@@ -424,9 +402,8 @@ diff -ur ./scanmatcher/icptest.cpp ../../gmapping_export/scanmatcher/icptest.cpp
  
  #include <list>
  #include "icp.h"
-diff -ur ./scanmatcher/Makefile ../../gmapping_export/scanmatcher/Makefile
---- ./scanmatcher/Makefile	2008-06-08 03:40:20.000000000 -0700
-+++ ../../gmapping_export/scanmatcher/Makefile	2011-10-24 14:50:03.896987255 -0700
+--- scanmatcher/Makefile	2008-06-08 03:40:20.000000000 -0700
++++ scanmatcher/Makefile	2011-10-24 14:50:03.896987255 -0700
 @@ -2,7 +2,7 @@
  APPS= scanmatch_test icptest
  
@@ -436,9 +413,8 @@ diff -ur ./scanmatcher/Makefile ../../gmapping_export/scanmatcher/Makefile
  #CPPFLAGS+=-I../sensor $(GSL_INCLUDE)
  CPPFLAGS+=-I../sensor
  
-diff -ur ./scanmatcher/scanmatcher.cpp ../../gmapping_export/scanmatcher/scanmatcher.cpp
---- ./scanmatcher/scanmatcher.cpp	2007-08-27 08:29:07.000000000 -0700
-+++ ../../gmapping_export/scanmatcher/scanmatcher.cpp	2011-10-24 14:39:43.443237415 -0700
+--- scanmatcher/scanmatcher.cpp	2007-08-27 08:29:07.000000000 -0700
++++ scanmatcher/scanmatcher.cpp	2011-10-24 14:39:43.443237415 -0700
 @@ -1,5 +1,7 @@
  #include <list>
  #include <iostream>
@@ -534,9 +510,8 @@ diff -ur ./scanmatcher/scanmatcher.cpp ../../gmapping_export/scanmatcher/scanmat
  			Point phit=lp;
  			phit.x+=*r*cos(lp.theta+*angle);
  			phit.y+=*r*sin(lp.theta+*angle);
-diff -ur ./scanmatcher/scanmatcher.h ../../gmapping_export/scanmatcher/scanmatcher.h
---- ./scanmatcher/scanmatcher.h	2007-08-27 08:29:07.000000000 -0700
-+++ ../../gmapping_export/scanmatcher/scanmatcher.h	2011-10-24 14:39:43.443237415 -0700
+--- scanmatcher/scanmatcher.h	2007-08-27 08:29:07.000000000 -0700
++++ scanmatcher/scanmatcher.h	2011-10-24 14:39:43.443237415 -0700
 @@ -7,7 +7,7 @@
  #include <utils/stat.h>
  #include <iostream>
@@ -592,18 +567,16 @@ diff -ur ./scanmatcher/scanmatcher.h ../../gmapping_export/scanmatcher/scanmatch
  		Point phit=lp;
  		phit.x+=*r*cos(lp.theta+*angle);
  		phit.y+=*r*sin(lp.theta+*angle);
-diff -ur ./scanmatcher/scanmatch_test.cpp ../../gmapping_export/scanmatcher/scanmatch_test.cpp
---- ./scanmatcher/scanmatch_test.cpp	2007-01-15 03:28:18.000000000 -0800
-+++ ../../gmapping_export/scanmatcher/scanmatch_test.cpp	2011-10-24 14:39:43.413237311 -0700
+--- scanmatcher/scanmatch_test.cpp	2007-01-15 03:28:18.000000000 -0800
++++ scanmatcher/scanmatch_test.cpp	2011-10-24 14:39:43.413237311 -0700
 @@ -1,4 +1,5 @@
  
 +#include <cstdlib>
  #include <fstream>
  #include <iostream>
  #include <log/carmenconfiguration.h>
-diff -ur ./sensor/sensor_range/rangereading.cpp ../../gmapping_export/sensor/sensor_range/rangereading.cpp
---- ./sensor/sensor_range/rangereading.cpp	2008-06-08 03:40:20.000000000 -0700
-+++ ../../gmapping_export/sensor/sensor_range/rangereading.cpp	2011-10-24 14:39:43.453237441 -0700
+--- sensor/sensor_range/rangereading.cpp	2008-06-08 03:40:20.000000000 -0700
++++ sensor/sensor_range/rangereading.cpp	2011-10-24 14:39:43.453237441 -0700
 @@ -1,3 +1,4 @@
 +#include <limits>
  #include <iostream>
