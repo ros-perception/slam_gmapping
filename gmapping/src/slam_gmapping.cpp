@@ -264,9 +264,9 @@ SlamGMapping::~SlamGMapping()
 bool
 SlamGMapping::getOdomPose(GMapping::OrientedPoint& gmap_pose, const ros::Time& t)
 {
-  // Get the robot's pose
+  // Get the laser's pose
   tf::Stamped<tf::Pose> ident (tf::Transform(tf::createQuaternionFromRPY(0,0,0),
-                                           tf::Vector3(0,0,0)), t, base_frame_);
+                                           tf::Vector3(0,0,0)), t, laser_frame_);
   tf::Stamped<tf::Transform> odom_pose;
   try
   {
@@ -288,11 +288,12 @@ SlamGMapping::getOdomPose(GMapping::OrientedPoint& gmap_pose, const ros::Time& t
 bool
 SlamGMapping::initMapper(const sensor_msgs::LaserScan& scan)
 {
+  laser_frame_ = scan.header.frame_id;
   // Get the laser's pose, relative to base.
   tf::Stamped<tf::Pose> ident;
   tf::Stamped<tf::Transform> laser_pose;
   ident.setIdentity();
-  ident.frame_id_ = scan.header.frame_id;
+  ident.frame_id_ = laser_frame_;
   ident.stamp_ = scan.header.stamp;
   try
   {
@@ -305,43 +306,51 @@ SlamGMapping::initMapper(const sensor_msgs::LaserScan& scan)
     return false;
   }
 
-  double yaw = tf::getYaw(laser_pose.getRotation());
-
-  GMapping::OrientedPoint gmap_pose(laser_pose.getOrigin().x(),
-                                    laser_pose.getOrigin().y(),
-                                    yaw);
-  ROS_DEBUG("laser's pose wrt base: %.3f %.3f %.3f",
-            laser_pose.getOrigin().x(),
-            laser_pose.getOrigin().y(),
-            yaw);
-  
-  // To account for lasers that are mounted upside-down, we determine the
-  // min, max, and increment angles of the laser in the base frame.
-  tf::Quaternion q;
-  q.setRPY(0.0, 0.0, scan.angle_min);
-  tf::Stamped<tf::Quaternion> min_q(q, scan.header.stamp,
-                                    scan.header.frame_id);
-  q.setRPY(0.0, 0.0, scan.angle_max);
-  tf::Stamped<tf::Quaternion> max_q(q, scan.header.stamp,
-                                    scan.header.frame_id);
+  // create a point 1m above the laser position and transform it into the laser-frame
+  tf::Vector3 v;
+  v.setValue(0, 0, 1 + laser_pose.getOrigin().z());
+  tf::Stamped<tf::Vector3> up(v, scan.header.stamp,
+                                      base_frame_);
   try
   {
-    tf_.transformQuaternion(base_frame_, min_q, min_q);
-    tf_.transformQuaternion(base_frame_, max_q, max_q);
+    tf_.transformPoint(laser_frame_, up, up);
+    ROS_DEBUG("Z-Axis in sensor frame: %.3f", up.z());
   }
   catch(tf::TransformException& e)
   {
-    ROS_WARN("Unable to transform min/max laser angles into base frame: %s",
+    ROS_WARN("Unable to determine orientation of laser: %s",
              e.what());
     return false;
   }
   
+  // gmapping doesnt take roll or pitch into account. So check for correct sensor alignment.
+  if (fabs(fabs(up.z()) - 1) > 0.001)
+  {
+    ROS_WARN("Laser has to be mounted planar! Z-coordinate has to be 1 or -1, but gave: %.5f",
+                 up.z());
+    return false;
+  }
+
   gsp_laser_beam_count_ = scan.ranges.size();
 
-  double angle_min = tf::getYaw(min_q);
-  double angle_max = tf::getYaw(max_q);
-  gsp_laser_angle_increment_ = scan.angle_increment;
-  ROS_DEBUG("Laser angles in base frame: min: %.3f max: %.3f inc: %.3f", angle_min, angle_max, gsp_laser_angle_increment_);
+  int orientationFactor;
+  if (up.z() > 0)
+  {
+    orientationFactor = 1;
+    ROS_INFO("Laser is mounted upwards.");
+  }
+  else
+  {
+    orientationFactor = -1;
+    ROS_INFO("Laser is mounted upside down.");
+  }
+
+  angle_min_ = orientationFactor * scan.angle_min;
+  angle_max_ = orientationFactor * scan.angle_max;
+  gsp_laser_angle_increment_ = orientationFactor * scan.angle_increment;
+  ROS_DEBUG("Laser angles top down in laser-frame: min: %.3f max: %.3f inc: %.3f", angle_min_, angle_max_, gsp_laser_angle_increment_);
+
+  GMapping::OrientedPoint gmap_pose(0, 0, 0);
 
   // setting maxRange and maxUrange here so we can set a reasonable default
   ros::NodeHandle private_nh_("~");
@@ -374,7 +383,10 @@ SlamGMapping::initMapper(const sensor_msgs::LaserScan& scan)
   /// @todo Expose setting an initial pose
   GMapping::OrientedPoint initialPose;
   if(!getOdomPose(initialPose, scan.header.stamp))
+  {
+    ROS_WARN("Unable to determine inital pose of laser! Starting point will be set to zero.");
     initialPose = GMapping::OrientedPoint(0.0, 0.0, 0.0);
+  }
 
   gsp_->setMatchingParameters(maxUrange_, maxRange_, sigma_,
                               kernelSize_, lstep_, astep_, iterations_,
@@ -413,8 +425,7 @@ SlamGMapping::addScan(const sensor_msgs::LaserScan& scan, GMapping::OrientedPoin
 
   // GMapping wants an array of doubles...
   double* ranges_double = new double[scan.ranges.size()];
-  // If the angle increment is negative, then we conclude that the laser is
-  // upside down, and invert the order of the readings.
+  // If the angle increment is negative, we have to invert the order of the readings.
   if (gsp_laser_angle_increment_ < 0)
   {
     ROS_DEBUG("Inverting scan");
@@ -488,21 +499,11 @@ SlamGMapping::laserCallback(const sensor_msgs::LaserScan::ConstPtr& scan)
     ROS_DEBUG("odom pose: %.3f %.3f %.3f", odom_pose.x, odom_pose.y, odom_pose.theta);
     ROS_DEBUG("correction: %.3f %.3f %.3f", mpose.x - odom_pose.x, mpose.y - odom_pose.y, mpose.theta - odom_pose.theta);
 
-    tf::Stamped<tf::Pose> odom_to_map;
-    try
-    {
-      tf_.transformPose(odom_frame_,tf::Stamped<tf::Pose> (tf::Transform(tf::createQuaternionFromRPY(0, 0, mpose.theta),
-                                                                    tf::Vector3(mpose.x, mpose.y, 0.0)).inverse(),
-                                                                    scan->header.stamp, base_frame_),odom_to_map);
-    }
-    catch(tf::TransformException e){
-      ROS_ERROR("Transform from base_link to odom failed\n");
-      odom_to_map.setIdentity();
-    }
+    tf::Transform laser_to_map = tf::Transform(tf::createQuaternionFromRPY(0, 0, mpose.theta), tf::Vector3(mpose.x, mpose.y, 0.0)).inverse();
+    tf::Transform odom_to_laser = tf::Transform(tf::createQuaternionFromRPY(0, 0, odom_pose.theta), tf::Vector3(odom_pose.x, odom_pose.y, 0.0));
 
     map_to_odom_mutex_.lock();
-    map_to_odom_ = tf::Transform(tf::Quaternion( odom_to_map.getRotation() ),
-                                 tf::Point(      odom_to_map.getOrigin() ) ).inverse();
+    map_to_odom_ = (odom_to_laser * laser_to_map).inverse();
     map_to_odom_mutex_.unlock();
 
     if(!got_map_ || (scan->header.stamp - last_map_update) > map_update_interval_)
@@ -541,14 +542,14 @@ SlamGMapping::updateMap(const sensor_msgs::LaserScan& scan)
   boost::mutex::scoped_lock(map_mutex_);
   GMapping::ScanMatcher matcher;
   double* laser_angles = new double[scan.ranges.size()];
-  double theta = scan.angle_min;
+  double theta = angle_min_;
   for(unsigned int i=0; i<scan.ranges.size(); i++)
   {
     if (gsp_laser_angle_increment_ < 0)
         laser_angles[scan.ranges.size()-i-1]=theta;
     else
         laser_angles[i]=theta;
-    theta += scan.angle_increment;
+    theta += gsp_laser_angle_increment_;
   }
 
   matcher.setLaserParameters(scan.ranges.size(), laser_angles,
