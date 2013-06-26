@@ -394,7 +394,7 @@ SlamGMapping::initMapper(const sensor_msgs::LaserScan& scan)
 
   gsp_->setMotionModelParameters(srr_, srt_, str_, stt_);
   gsp_->setUpdateDistances(linearUpdate_, angularUpdate_, resampleThreshold_);
-  gsp_->setUpdatePeriod(temporalUpdate_);
+//  gsp_->setUpdatePeriod(temporalUpdate_);
   gsp_->setgenerateMap(false);
   gsp_->GridSlamProcessor::init(particles_, xmin_, ymin_, xmax_, ymax_,
                                 delta_, initialPose);
