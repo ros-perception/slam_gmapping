@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
-project(slam_gmapping)
+project(gmapping)
 
-find_package(catkin REQUIRED gmapping roscpp rosconsole tf)
+find_package(catkin REQUIRED openslam_gmapping roscpp rosconsole tf)
 
 catkin_package()
 
