@@ -1,29 +1,50 @@
 cmake_minimum_required(VERSION 2.8)
 project(gmapping)
 
-find_package(catkin REQUIRED openslam_gmapping roscpp rosconsole tf)
-
-catkin_package()
+find_package(catkin REQUIRED nav_msgs openslam_gmapping roscpp rostest tf)
 
 find_package(Boost REQUIRED signals)
 
-include_directories(${Boost_INCLUDE_DIRS})
-include_directories(${catkin_INCLUDE_DIRS})
+include_directories(${Boost_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 
+include_directories(src)
 
-message(INFO ${CATKIN_INCLUDE_DIRS})
+catkin_package()
 
-include_directories(include include/gmapping)
 add_executable(slam_gmapping src/slam_gmapping.cpp src/main.cpp)
-target_link_libraries(slam_gmapping gridfastslam sensor_odometry sensor_range utils scanmatcher)
-target_link_libraries(slam_gmapping ${BOOST_LIBRARIES} ${catkin_LIBRARIES})
+target_link_libraries(slam_gmapping ${Boost_LIBRARIES} ${catkin_LIBRARIES})
+if(catkin_EXPORTED_TARGETS)
+  add_dependencies(slam_gmapping ${catkin_EXPORTED_TARGETS})
+endif()
 
-catkin_add_gtest(rtest test/rtest.cpp)
+install(TARGETS slam_gmapping
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+if(TARGET tests)
+  add_executable(gmapping-rtest EXCLUDE_FROM_ALL test/rtest.cpp)
+  target_link_libraries(gmapping-rtest ${catkin_LIBRARIES} ${GTEST_LIBRARIES})
+  add_dependencies(tests gmapping-rtest)
+endif()
 
 # Need to make the tests more robust; currently the output map can differ
 # substantially between runs.
-#rosbuild_download_test_data(http://pr.willowgarage.com/data/gmapping/basic_localization_stage_indexed.bag test/basic_localization_stage_indexed.bag 322a0014f47bcfbb0ad16a317738b0dc)
-#rosbuild_download_test_data(http://pr.willowgarage.com/data/gmapping/hallway_slow_2011-03-04-21-41-33.bag test/hallway_slow_2011-03-04-21-41-33.bag e772b89713693adc610f4c5b96f5dc03)
-##rosbuild_download_test_data(http://pr.willowgarage.com/data/gmapping/basic_localization_stage_groundtruth.pgm test/basic_localization_stage_groundtruth.pgm abf208f721053915145215b18c98f9b3)
-#rosbuild_add_rostest(test/basic_localization_stage.launch)
-#rosbuild_add_rostest(test/basic_localization_laser_different_beamcount.test)
+catkin_download_test_data(
+  ${PROJECT_NAME}_basic_localization_stage_indexed.bag
+  http://pr.willowgarage.com/data/gmapping/basic_localization_stage_indexed.bag
+  DESTINATION ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_SHARE_DESTINATION}/test
+  MD5 322a0014f47bcfbb0ad16a317738b0dc)
+catkin_download_test_data(
+  ${PROJECT_NAME}_hallway_slow_2011-03-04-21-41-33.bag
+  http://pr.willowgarage.com/data/gmapping/hallway_slow_2011-03-04-21-41-33.bag
+  DESTINATION ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_SHARE_DESTINATION}/test
+  MD5 e772b89713693adc610f4c5b96f5dc03)
+catkin_download_test_data(
+  ${PROJECT_NAME}_basic_localization_stage_groundtruth.pgm
+  http://pr.willowgarage.com/data/gmapping/basic_localization_stage_groundtruth.pgm
+  DESTINATION ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_SHARE_DESTINATION}/test
+  MD5 abf208f721053915145215b18c98f9b3)
+add_rostest(test/basic_localization_stage.launch)
+add_rostest(test/basic_localization_laser_different_beamcount.test)
