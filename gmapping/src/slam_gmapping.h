@@ -74,6 +74,7 @@ class SlamGMapping
 
     int laser_count_;
     int throttle_scans_;
+    double scan_tolerance_;
 
     boost::thread* transform_thread_;
 

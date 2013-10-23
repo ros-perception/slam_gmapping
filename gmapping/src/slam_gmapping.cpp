@@ -54,6 +54,7 @@ Reads the following parameters from the parameter server
 Parameters used by our GMapping wrapper:
 
 - @b "~throttle_scans": @b [int] throw away every nth laser scan
+- @b "~scan_tolerance": @b [double] throw away laser scans older than this value (in seconds)
 - @b "~base_frame": @b [string] the tf frame_id to use for the robot base pose
 - @b "~map_frame": @b [string] the tf frame_id where the robot pose on the map is published
 - @b "~odom_frame": @b [string] the tf frame_id from which odometry is read
@@ -146,6 +147,8 @@ SlamGMapping::SlamGMapping():
   // Parameters used by our GMapping wrapper
   if(!private_nh_.getParam("throttle_scans", throttle_scans_))
     throttle_scans_ = 1;
+  if(!private_nh_.getParam("scan_tolerance", scan_tolerance_))
+    scan_tolerance_ = -1.0;  // disable by default
   if(!private_nh_.getParam("base_frame", base_frame_))
     base_frame_ = "base_link";
   if(!private_nh_.getParam("map_frame", map_frame_))
@@ -225,8 +228,8 @@ SlamGMapping::SlamGMapping():
   sst_ = node_.advertise<nav_msgs::OccupancyGrid>("map", 1, true);
   sstm_ = node_.advertise<nav_msgs::MapMetaData>("map_metadata", 1, true);
   ss_ = node_.advertiseService("dynamic_map", &SlamGMapping::mapCallback, this);
-  scan_filter_sub_ = new message_filters::Subscriber<sensor_msgs::LaserScan>(node_, "scan", 5);
-  scan_filter_ = new tf::MessageFilter<sensor_msgs::LaserScan>(*scan_filter_sub_, tf_, odom_frame_, 5);
+  scan_filter_sub_ = new message_filters::Subscriber<sensor_msgs::LaserScan>(node_, "scan", 1);
+  scan_filter_ = new tf::MessageFilter<sensor_msgs::LaserScan>(*scan_filter_sub_, tf_, odom_frame_, 1);
   scan_filter_->registerCallback(boost::bind(&SlamGMapping::laserCallback, this, _1));
 
   transform_thread_ = new boost::thread(boost::bind(&SlamGMapping::publishLoop, this, transform_publish_period));
@@ -475,6 +478,12 @@ SlamGMapping::addScan(const sensor_msgs::LaserScan& scan, GMapping::OrientedPoin
 void
 SlamGMapping::laserCallback(const sensor_msgs::LaserScan::ConstPtr& scan)
 {
+  if ((scan_tolerance_ >= 0.0) && ((ros::Time::now() - scan->header.stamp).toSec() > scan_tolerance_))
+  {
+    ROS_WARN("Skipping laser scan %fs old", (ros::Time::now() - scan->header.stamp).toSec());
+    return;
+  }
+
   laser_count_++;
   if ((laser_count_ % throttle_scans_) != 0)
     return;
