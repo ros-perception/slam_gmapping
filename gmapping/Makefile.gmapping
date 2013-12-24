@@ -5,7 +5,7 @@ all: installed
 #  svn co -r 39 https://openslam.informatik.uni-freiburg.de/data/svn/gmapping/trunk gmapping-svn
 FILENAME = gmapping_r39.tar.gz
 TARBALL = build/$(FILENAME)
-TARBALL_URL = http://pr.willowgarage.com/downloads/$(FILENAME)
+TARBALL_URL = http://download.ros.org/downloads/$(FILENAME)
 SOURCE_DIR = build/gmapping_export
 UNPACK_CMD = tar xzf
 MD5SUM_FILE = $(FILENAME).md5sum
