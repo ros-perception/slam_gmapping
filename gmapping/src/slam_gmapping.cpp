@@ -539,7 +539,7 @@ SlamGMapping::computePoseEntropy()
 void
 SlamGMapping::updateMap(const sensor_msgs::LaserScan& scan)
 {
-  boost::mutex::scoped_lock(map_mutex_);
+  boost::mutex::scoped_lock lock map_lock (map_mutex_);
   GMapping::ScanMatcher matcher;
   double* laser_angles = new double[scan.ranges.size()];
   double theta = angle_min_;
@@ -659,7 +659,7 @@ bool
 SlamGMapping::mapCallback(nav_msgs::GetMap::Request  &req,
                           nav_msgs::GetMap::Response &res)
 {
-  boost::mutex::scoped_lock(map_mutex_);
+  boost::mutex::scoped_lock map_lock (map_mutex_);
   if(got_map_ && map_.map.info.width && map_.map.info.height)
   {
     res = map_;
