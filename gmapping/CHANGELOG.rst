@@ -2,8 +2,8 @@
 Changelog for package gmapping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.3.1 (2014-01-13)
+------------------
 * Fix map mutex use (gmapping issue `#11 <https://github.com/ros-perception/slam_gmapping/issues/11>`_)
 * check for CATKIN_ENABLE_TESTING
 * Contributors: Lukas Bulwahn, Stefan Kohlbrecher

@@ -1,6 +1,6 @@
 <package>
   <name>gmapping</name>
-  <version>1.3.0</version>
+  <version>1.3.1</version>
   <description>This package contains a ROS wrapper for OpenSlam's Gmapping. 
   The gmapping package provides laser-based SLAM (Simultaneous Localization and Mapping), 
   as a ROS node called slam_gmapping. Using slam_gmapping, you can create a 2-D occupancy
