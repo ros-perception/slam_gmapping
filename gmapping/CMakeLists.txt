@@ -34,17 +34,17 @@ if(CATKIN_ENABLE_TESTING)
   # substantially between runs.
   catkin_download_test_data(
     ${PROJECT_NAME}_basic_localization_stage_indexed.bag
-    http://pr.willowgarage.com/data/gmapping/basic_localization_stage_indexed.bag
+    http://download.ros.org/data/gmapping/basic_localization_stage_indexed.bag
     DESTINATION ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_SHARE_DESTINATION}/test
     MD5 322a0014f47bcfbb0ad16a317738b0dc)
   catkin_download_test_data(
     ${PROJECT_NAME}_hallway_slow_2011-03-04-21-41-33.bag
-    http://pr.willowgarage.com/data/gmapping/hallway_slow_2011-03-04-21-41-33.bag
+    http://download.ros.org/data/gmapping/hallway_slow_2011-03-04-21-41-33.bag
     DESTINATION ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_SHARE_DESTINATION}/test
     MD5 e772b89713693adc610f4c5b96f5dc03)
   catkin_download_test_data(
     ${PROJECT_NAME}_basic_localization_stage_groundtruth.pgm
-    http://pr.willowgarage.com/data/gmapping/basic_localization_stage_groundtruth.pgm
+    http://download.ros.org/data/gmapping/basic_localization_stage_groundtruth.pgm
     DESTINATION ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_SHARE_DESTINATION}/test
     MD5 abf208f721053915145215b18c98f9b3)
   add_rostest(test/basic_localization_stage.launch)
