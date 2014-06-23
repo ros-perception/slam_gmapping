@@ -2,6 +2,11 @@
 Changelog for package gmapping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Adding the ability to set openslam_gmapping's miminumScore through the ros parameter minimumScore
+* Contributors: Koen Lekkerkerker
+
 1.3.1 (2014-01-13)
 ------------------
 * Fix map mutex use (gmapping issue `#11 <https://github.com/ros-perception/slam_gmapping/issues/11>`_)
