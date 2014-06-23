@@ -92,6 +92,7 @@ class SlamGMapping
     double maxRange_;
     double maxUrange_;
     double maxrange_;
+    double minimum_score_;
     double sigma_;
     int kernelSize_;
     double lstep_;
