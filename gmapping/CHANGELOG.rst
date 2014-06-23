@@ -2,8 +2,8 @@
 Changelog for package gmapping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.3.3 (2014-06-23)
+------------------
 * Adding the ability to set openslam_gmapping's miminumScore through the ros parameter minimumScore
 * Contributors: Koen Lekkerkerker
 
