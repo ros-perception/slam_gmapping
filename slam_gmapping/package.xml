@@ -1,6 +1,6 @@
 <package>
   <name>slam_gmapping</name>
-  <version>1.3.3</version>
+  <version>1.3.4</version>
   <description>slam_gmapping contains a wrapper around gmapping which provides SLAM capabilities.</description>
   <author>Brian Gerkey</author>
   <maintainer email="vincent.rabaud@gmail.com">Vincent Rabaud</maintainer>
