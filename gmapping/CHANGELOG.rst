@@ -2,8 +2,8 @@
 Changelog for package gmapping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.3.5 (2014-08-28)
+------------------
 * Fixed typo in slam_gmapping_pr2.launch
   Fixed a typo in the launchfile in the parameter "map_update_interval".
 * Contributors: DaMalo
