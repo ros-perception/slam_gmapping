@@ -2,18 +2,95 @@
 Changelog for package gmapping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fixed typo in slam_gmapping_pr2.launch
+  Fixed a typo in the launchfile in the parameter "map_update_interval".
+* Contributors: DaMalo
+
+1.3.4 (2014-08-07)
+------------------
+* Reenabled temporal update in slam_gmapping.cpp
+* Contributors: DaMalo
+
 1.3.3 (2014-06-23)
 ------------------
-* Adding the ability to set openslam_gmapping's miminumScore through the ros parameter minimumScore
-* Contributors: Koen Lekkerkerker
+* Adding the ability to set openslam_gmapping miminumScore through the ros parameter minimumScore
+* Contributors: Koen Lekkerkerker, William Woodall
+
+1.3.2 (2014-01-14)
+------------------
+* Contributors: Vincent Rabaud
 
 1.3.1 (2014-01-13)
 ------------------
-* Fix map mutex use (gmapping issue `#11 <https://github.com/ros-perception/slam_gmapping/issues/11>`_)
+* Fix usage of scoped locks so that they are not immediately destroyed.
+  fixes `#11 <https://github.com/ros-perception/slam_gmapping/issues/11>`_
 * check for CATKIN_ENABLE_TESTING
-* Contributors: Lukas Bulwahn, Stefan Kohlbrecher
+* Contributors: Lukas Bulwahn, Stefan Kohlbrecher, William Woodall
 
-1.3.0 (2013-06-28 17:51:57 -0700)
----------------------------------
-- Catkinized in preparation of Hydro release
-- The gmapping SLAM implementation has been moved out into a separate repo: https://github.com/ros-perception/openslam_gmapping
+1.3.0 (2013-06-28)
+------------------
+* Renamed to gmapping, adding metapackage for slam_gmapping
+* catkinize slam_gmapping
+* Changed reference frame from base to laser to account for upside down and/or back facing laserscanners.
+  - Added a check if the scanner is facing down
+  - Added a safety check if the scanner is aligned planar
+  - Made laserscan min- and max-angles global as they are needed later for scanners with a negative angle-increment
+  - Replaced the base->laser pose for gmapping with the identity transform and included the base->laser part into the gmap_pose
+  - Removed a transform-lookup from the map->odom transformation process as it is not needed anymore
+  These changes should make gmapping more robust against laserscanners that are mounted upside down, facing backwards or are rotating counter-clockwise.
+  It will also allow gmapping to work with panning laserscanners, since the transform base->laser is no longer considered fixed.
+* Fix poorly formed paths in patches
+  These patches won't apply in Fedora because they contain "..", which is considered "unsafe"
+* Fixed test files to use the new rosbag command layout.
+* Respect tf_prefix when sending maps
+* Fixed tf expiration
+* Added tf_delay param
+* Add gcc 4.7 patch and Precise support by removing wiped during installed
+* Oneiric linker fixes, bump version to 1.2.6
+* Convert to not use bullet datatypes directly
+* Rejiggered linker lines to accommodate Oneiric's stricter linker behavior.
+* Now uses angle_increment provided in laser scan message, instead of computing it myself (not sure why I was doing that, anyway), `#4730 <https://github.com/ros-perception/slam_gmapping/issues/4730>`_
+* Applied patch to avoid assert when laser gives varying number of beams per
+  scan, `#4856 <https://github.com/ros-perception/slam_gmapping/issues/4856>`_.  Added the bag from that ticket as a test case.
+* Applied patch from `#4984 <https://github.com/ros-perception/slam_gmapping/issues/4984>`_ to fix occ grid generation with lasers that provide scans in reverse order
+* Applied patch from `#4583 <https://github.com/ros-perception/slam_gmapping/issues/4583>`_ with misc fixes to our patch against gmapping
+* Excluded test program from all build
+* Applied typo fix from Maurice Fallon
+* Added Ubuntu platform tags to manifest
+* Removed unused inverted_laser parameter
+* Added transform logic necessary to account for non-horizontal lasers. This
+  change is intended to handle upside-down lasers, but should also work for
+  non-planar lasers (as long as the vertical structure of the environment is
+  continuous), `#3052 <https://github.com/ros-perception/slam_gmapping/issues/3052>`_. I tested minimally with a hacked version of Stage, but
+  this functionality still needs to be validated on data from a real robot
+  with an upside-down laser.
+* Reindexed bag used in testing
+* Added publication of entropy
+* add entropy computation method
+* Added occ_thresh parameter
+* Turning time based updates off by default
+* Updating so that gmapping updates on a timer when not moving. Added the temporalUpdate parameter and updated docs.
+* Updated md5sums for new bags
+* Threading publishing of transforms so that they are published regularly regardless of how long map updates take.
+* Updated patch to fix gcc 4.4 warning, and made top-level Makefile call through to Makefile.gmapping on clean
+* Updating to work with the navigation stack. Now publishes header information on map messages.
+* Applied patch to update tf usage, `#3457 <https://github.com/ros-perception/slam_gmapping/issues/3457>`_
+* Remove use of deprecated rosbuild macros
+* Removed unused parameter
+* Fix the position gmapping gives to the map's info.  Was trying to center the map on the origin, when it should just have been using the world positiong of the map's origin (`#3037 <https://github.com/ros-perception/slam_gmapping/issues/3037>`_)
+* Added doc cleared to manifest
+* Switched sleep to WallDuration, to avoid getting stuck after rosplay has run out of time data to publish
+* Converted from tf::MessageNotifier to tf::MessageFilter.
+* Reverted accidental change to CMakeLists.txt
+* Added advertisement and publication of MapMetaData (docs are updated to
+  match).  Added minimal test for the resulting map.  Updated local params to use
+  NodeHandle("~").
+* Added latched topic version of map, API cleared
+* Updated manifest to explain version that we're using
+* Remove ros/node.h inclusion
+* tf publishes on new topic: \tf. See ticket `#2381 <https://github.com/ros-perception/slam_gmapping/issues/2381>`_
+* Merging in changes from reorgnization of laser pipeline.
+* removed redundant code (getOdomPose) that could result in unnecessary warnings
+* Contributors: Ben Struss, Dave Hershberger, Dereck Wonnacott, Mike Ferguson, Scott K Logan, Vincent Rabaud, William Woodall, duhadway-bosch, eitan, gerkey, jfaust, jleibs, kwc, meeussen, vrabaud, wheeler
