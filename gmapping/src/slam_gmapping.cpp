@@ -309,6 +309,13 @@ SlamGMapping::initMapper(const sensor_msgs::LaserScan& scan)
     return false;
   }
 
+  // Check that laserscan is from -x to x in angles:
+  if (fabs(fabs(scan.angle_min) - fabs(scan.angle_max)) > 0.001)
+  {
+    ROS_ERROR("Scan message must contain angles from -x to x, i.e. angle_min = -angle_max");
+    return false;
+  }
+
   // create a point 1m above the laser position and transform it into the laser-frame
   tf::Vector3 v;
   v.setValue(0, 0, 1 + laser_pose.getOrigin().z());
