@@ -110,6 +110,7 @@ Initial map dimensions and resolution:
 #include <iostream>
 
 #include <time.h>
+#include <cfloat>
 
 #include "ros/ros.h"
 #include "ros/console.h"
@@ -306,6 +307,13 @@ SlamGMapping::initMapper(const sensor_msgs::LaserScan& scan)
   {
     ROS_WARN("Failed to compute laser pose, aborting initialization (%s)",
              e.what());
+    return false;
+  }
+
+  // Check that laserscan is from -x to x in angles:
+  if (fabs(fabs(scan.angle_min) - fabs(scan.angle_max)) > FLT_EPSILON)
+  {
+    ROS_ERROR("Scan message must contain angles from -x to x, i.e. angle_min = -angle_max");
     return false;
   }
 
