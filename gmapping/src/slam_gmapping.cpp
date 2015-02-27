@@ -119,17 +119,16 @@ Initial map dimensions and resolution:
 #include "gmapping/sensor/sensor_range/rangesensor.h"
 #include "gmapping/sensor/sensor_odometry/odometrysensor.h"
 
+#include <rosbag/bag.h>
+#include <rosbag/view.h>
+#include <boost/foreach.hpp>
+#define foreach BOOST_FOREACH
 // compute linear index for given map coords
 #define MAP_IDX(sx, i, j) ((sx) * (j) + (i))
 
-SlamGMapping::SlamGMapping():
-  map_to_odom_(tf::Transform(tf::createQuaternionFromRPY( 0, 0, 0 ), tf::Point(0, 0, 0 ))),
-  laser_count_(0), transform_thread_(NULL)
+void SlamGMapping::init()
 {
-  // log4cxx::Logger::getLogger(ROSCONSOLE_DEFAULT_NAME)->setLevel(ros::console::g_level_lookup[ros::console::levels::Debug]);
-
-  // The library is pretty chatty
-  //gsp_ = new GMapping::GridSlamProcessor(std::cerr);
+    
   gsp_ = new GMapping::GridSlamProcessor();
   ROS_ASSERT(gsp_);
 
@@ -221,10 +220,29 @@ SlamGMapping::SlamGMapping():
     lasamplerange_ = 0.005;
   if(!private_nh_.getParam("lasamplestep", lasamplestep_))
     lasamplestep_ = 0.005;
+
+}
+
+
+
+SlamGMapping::SlamGMapping():
+  map_to_odom_(tf::Transform(tf::createQuaternionFromRPY( 0, 0, 0 ), tf::Point(0, 0, 0 ))),
+  laser_count_(0), transform_thread_(NULL)
+{
+  // log4cxx::Logger::getLogger(ROSCONSOLE_DEFAULT_NAME)->setLevel(ros::console::g_level_lookup[ros::console::levels::Debug]);
+  // The library is pretty chatty
+  //gsp_ = new GMapping::GridSlamProcessor(std::cerr);
+
+    this->init();
     
+  // Call the sampling function once to set the seed.
+  GMapping::sampleGaussian(1, time(NULL));
+    
+  double transform_publish_period;
+  ros::NodeHandle private_nh_("~");
   if(!private_nh_.getParam("tf_delay", tf_delay_))
     tf_delay_ = transform_publish_period;
-
+    
   entropy_publisher_ = private_nh_.advertise<std_msgs::Float64>("entropy", 1, true);
   sst_ = node_.advertise<nav_msgs::OccupancyGrid>("map", 1, true);
   sstm_ = node_.advertise<nav_msgs::MapMetaData>("map_metadata", 1, true);
@@ -232,8 +250,68 @@ SlamGMapping::SlamGMapping():
   scan_filter_sub_ = new message_filters::Subscriber<sensor_msgs::LaserScan>(node_, "scan", 5);
   scan_filter_ = new tf::MessageFilter<sensor_msgs::LaserScan>(*scan_filter_sub_, tf_, odom_frame_, 5);
   scan_filter_->registerCallback(boost::bind(&SlamGMapping::laserCallback, this, _1));
-
   transform_thread_ = new boost::thread(boost::bind(&SlamGMapping::publishLoop, this, transform_publish_period));
+}
+
+SlamGMapping::SlamGMapping(const std::string bag_filename, const std::string scan_topic, unsigned long int seed, unsigned long int max_duration_buffer):
+  map_to_odom_(tf::Transform(tf::createQuaternionFromRPY( 0, 0, 0 ), tf::Point(0, 0, 0 ))),
+  laser_count_(0), transform_thread_(NULL),
+  tf_(ros::Duration(max_duration_buffer))
+{
+    this->init();
+  //  We use a fixed value for the seed, so a run is perfectly reproductible
+  GMapping::sampleGaussian(1, seed);  // we set seed to seed defined by user
+  double transform_publish_period;
+  ros::NodeHandle private_nh_("~");
+  entropy_publisher_ = private_nh_.advertise<std_msgs::Float64>("entropy", 1, true);
+  sst_ = node_.advertise<nav_msgs::OccupancyGrid>("map", 1, true);
+  sstm_ = node_.advertise<nav_msgs::MapMetaData>("map_metadata", 1, true);
+  ss_ = node_.advertiseService("dynamic_map", &SlamGMapping::mapCallback, this);
+    
+
+  rosbag::Bag bag;
+  bag.open(bag_filename, rosbag::bagmode::Read);
+  
+  std::vector<std::string> topics;
+  std::vector<std::string> topics_scan;
+  topics.push_back(std::string("/tf"));
+  rosbag::View view(bag, rosbag::TopicQuery(topics));
+  
+  // Saving all transforms from rosbag into tf buffer
+  foreach(rosbag::MessageInstance const m, view)
+  {
+      tf::tfMessage::ConstPtr cur_tf = m.instantiate<tf::tfMessage>();
+      if (cur_tf != NULL) {
+          for (size_t i = 0; i < cur_tf->transforms.size(); ++i)
+          {
+              geometry_msgs::TransformStamped transformStamped;
+              tf::StampedTransform stampedTf;
+              transformStamped = cur_tf->transforms[i];
+              tf::transformStampedMsgToTF(transformStamped, stampedTf);
+              tf_.setTransform(stampedTf);
+          }
+      }
+  }
+    
+    topics_scan.push_back(scan_topic); 
+    rosbag::View viewall(bag, rosbag::TopicQuery(topics_scan));
+    int i = 0;
+    foreach(rosbag::MessageInstance const m, viewall)
+    {
+        i+=1 ;
+        sensor_msgs::LaserScan::ConstPtr s = m.instantiate<sensor_msgs::LaserScan>();
+        if (s != NULL) {
+            if (!(ros::Time(s->header.stamp)).is_zero())
+            {
+                this->laserCallback(s);
+            }
+            // ignoring un-timestamped data : they could appear when gmapping 
+            // as been runned online during rosbag recording (and when using /scan topic)
+        }
+        
+    }
+    
+    bag.close();
 }
 
 void SlamGMapping::publishLoop(double transform_publish_period){
@@ -418,8 +496,6 @@ SlamGMapping::initMapper(const sensor_msgs::LaserScan& scan)
   gsp_->setlasamplestep(lasamplestep_);
   gsp_->setminimumScore(minimum_score_);
 
-  // Call the sampling function once to set the seed.
-  GMapping::sampleGaussian(1,time(NULL));
 
   ROS_INFO("Initialization complete");
 
