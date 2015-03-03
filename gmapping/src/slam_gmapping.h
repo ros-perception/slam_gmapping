@@ -34,6 +34,7 @@ class SlamGMapping
 {
   public:
     SlamGMapping();
+    SlamGMapping(const std::string bag_filename, const std::string scan_topic, unsigned long int seed, unsigned long int max_duration_buffer);
     ~SlamGMapping();
 
     void publishTransform();
@@ -42,8 +43,9 @@ class SlamGMapping
     bool mapCallback(nav_msgs::GetMap::Request  &req,
                      nav_msgs::GetMap::Response &res);
     void publishLoop(double transform_publish_period);
-
+    void init();
   private:
+    void process_bag(const std::string bag_filename, const std::string scan_topic);
     ros::NodeHandle node_;
     ros::Publisher entropy_publisher_;
     ros::Publisher sst_;
