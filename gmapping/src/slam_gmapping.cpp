@@ -124,7 +124,14 @@ Initial map dimensions and resolution:
 
 SlamGMapping::SlamGMapping():
   map_to_odom_(tf::Transform(tf::createQuaternionFromRPY( 0, 0, 0 ), tf::Point(0, 0, 0 ))),
-  laser_count_(0), transform_thread_(NULL)
+  laser_count_(0), private_nh_("~"), transform_thread_(NULL)
+{
+  seed_ = time(NULL);
+  init();
+}
+
+
+void SlamGMapping::init()
 {
   // log4cxx::Logger::getLogger(ROSCONSOLE_DEFAULT_NAME)->setLevel(ros::console::g_level_lookup[ros::console::levels::Debug]);
 
@@ -142,9 +149,9 @@ SlamGMapping::SlamGMapping():
 
   got_first_scan_ = false;
   got_map_ = false;
+  
 
-  ros::NodeHandle private_nh_("~");
-
+  
   // Parameters used by our GMapping wrapper
   if(!private_nh_.getParam("throttle_scans", throttle_scans_))
     throttle_scans_ = 1;
@@ -155,8 +162,7 @@ SlamGMapping::SlamGMapping():
   if(!private_nh_.getParam("odom_frame", odom_frame_))
     odom_frame_ = "odom";
 
-  double transform_publish_period;
-  private_nh_.param("transform_publish_period", transform_publish_period, 0.05);
+  private_nh_.param("transform_publish_period", transform_publish_period_, 0.05);
 
   double tmp;
   if(!private_nh_.getParam("map_update_interval", tmp))
@@ -223,8 +229,13 @@ SlamGMapping::SlamGMapping():
     lasamplestep_ = 0.005;
     
   if(!private_nh_.getParam("tf_delay", tf_delay_))
-    tf_delay_ = transform_publish_period;
+    tf_delay_ = transform_publish_period_;
 
+}
+
+
+void SlamGMapping::startLiveSlam()
+{
   entropy_publisher_ = private_nh_.advertise<std_msgs::Float64>("entropy", 1, true);
   sst_ = node_.advertise<nav_msgs::OccupancyGrid>("map", 1, true);
   sstm_ = node_.advertise<nav_msgs::MapMetaData>("map_metadata", 1, true);
@@ -233,7 +244,7 @@ SlamGMapping::SlamGMapping():
   scan_filter_ = new tf::MessageFilter<sensor_msgs::LaserScan>(*scan_filter_sub_, tf_, odom_frame_, 5);
   scan_filter_->registerCallback(boost::bind(&SlamGMapping::laserCallback, this, _1));
 
-  transform_thread_ = new boost::thread(boost::bind(&SlamGMapping::publishLoop, this, transform_publish_period));
+  transform_thread_ = new boost::thread(boost::bind(&SlamGMapping::publishLoop, this, transform_publish_period_));
 }
 
 void SlamGMapping::publishLoop(double transform_publish_period){
@@ -419,7 +430,7 @@ SlamGMapping::initMapper(const sensor_msgs::LaserScan& scan)
   gsp_->setminimumScore(minimum_score_);
 
   // Call the sampling function once to set the seed.
-  GMapping::sampleGaussian(1,time(NULL));
+  GMapping::sampleGaussian(1,seed_);
 
   ROS_INFO("Initialization complete");
 
