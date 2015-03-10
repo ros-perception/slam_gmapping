@@ -34,10 +34,12 @@ class SlamGMapping
 {
   public:
     SlamGMapping();
+    SlamGMapping(unsigned long int seed, unsigned long int max_duration_buffer);
     ~SlamGMapping();
 
     void init();
     void startLiveSlam();
+    void startReplay(std::string bag_fname, std::string scan_topic);
     void publishTransform();
   
     void laserCallback(const sensor_msgs::LaserScan::ConstPtr& scan);
