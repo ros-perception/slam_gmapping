@@ -39,7 +39,7 @@ class SlamGMapping
 
     void init();
     void startLiveSlam();
-    void startReplay(std::string bag_fname, std::string scan_topic);
+    void startReplay(const std::string & bag_fname, std::string scan_topic);
     void publishTransform();
   
     void laserCallback(const sensor_msgs::LaserScan::ConstPtr& scan);

@@ -259,7 +259,7 @@ void SlamGMapping::startLiveSlam()
   transform_thread_ = new boost::thread(boost::bind(&SlamGMapping::publishLoop, this, transform_publish_period_));
 }
 
-void SlamGMapping::startReplay(std::string bag_fname, std::string scan_topic)
+void SlamGMapping::startReplay(const std::string & bag_fname, std::string scan_topic)
 {
   double transform_publish_period;
   ros::NodeHandle private_nh_("~");
@@ -294,10 +294,8 @@ void SlamGMapping::startReplay(std::string bag_fname, std::string scan_topic)
   
   topics_scan.push_back(scan_topic); 
   rosbag::View viewall(bag, rosbag::TopicQuery(topics_scan));
-  int i = 0;
   foreach(rosbag::MessageInstance const m, viewall)
   {
-    i+=1 ;
     sensor_msgs::LaserScan::ConstPtr s = m.instantiate<sensor_msgs::LaserScan>();
     if (s != NULL) {
       if (!(ros::Time(s->header.stamp)).is_zero())
