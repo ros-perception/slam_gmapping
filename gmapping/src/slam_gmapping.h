@@ -34,8 +34,12 @@ class SlamGMapping
 {
   public:
     SlamGMapping();
+    SlamGMapping(unsigned long int seed, unsigned long int max_duration_buffer);
     ~SlamGMapping();
 
+    void init();
+    void startLiveSlam();
+    void startReplay(const std::string & bag_fname, std::string scan_topic);
     void publishTransform();
   
     void laserCallback(const sensor_msgs::LaserScan::ConstPtr& scan);
@@ -121,5 +125,10 @@ class SlamGMapping
     double lasamplerange_;
     double lasamplestep_;
     
+    ros::NodeHandle private_nh_;
+    
+    unsigned long int seed_;
+    
+    double transform_publish_period_;
     double tf_delay_;
 };

@@ -1,0 +1,9 @@
+<launch>
+  <param name="/use_sim_time" value="true"/>
+  <node pkg="gmapping" type="slam_gmapping_replay" name="slam_gmapping_replay" output="screen"
+        args="--bag_filename $(find gmapping)/test/basic_localization_stage_indexed.bag --scan_topic /base_scan"/>
+  <!--test time-limit="30" test-name="basic_localization_stage" pkg="gmapping" 
+        type="test_map.py" args="90.0"/-->
+  <!-- TODO: Fix the rtest to work with replay, for now it's not working -->
+  <test time-limit="30" test-name="map_data_test" pkg="gmapping" type="gmapping-rtest" args="90.0 0.05 4000 4000 0.005 0.010"/>
+</launch>
