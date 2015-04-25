@@ -15,17 +15,21 @@
   <buildtool_depend version_gte="0.5.68">catkin</buildtool_depend>
 
   <build_depend>nav_msgs</build_depend>
+  <build_depend>nodelet</build_depend>
   <build_depend>openslam_gmapping</build_depend>
   <build_depend>roscpp</build_depend>
   <build_depend>rostest</build_depend>
-  <build_depend>tf</build_depend>
-  <build_depend>nodelet</build_depend>
+  <build_depend>tf2</build_depend>
+  <build_depend>tf2_geometry_msgs</build_depend>
+  <build_depend>tf2_ros</build_depend>
 
   <run_depend>nav_msgs</run_depend>
+  <run_depend>nodelet</run_depend>
   <run_depend>openslam_gmapping</run_depend>
   <run_depend>roscpp</run_depend>
-  <run_depend>tf</run_depend>
-  <run_depend>nodelet</run_depend>
+  <run_depend>tf2</run_depend>
+  <run_depend>tf2_geometry_msgs</run_depend>
+  <run_depend>tf2_ros</run_depend>
   
   <export>
     <nodelet plugin="${prefix}/nodelet_plugins.xml" />

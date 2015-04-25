@@ -20,10 +20,12 @@
 #include "sensor_msgs/LaserScan.h"
 #include "std_msgs/Float64.h"
 #include "nav_msgs/GetMap.h"
-#include "tf/transform_listener.h"
-#include "tf/transform_broadcaster.h"
+#include <tf2/LinearMath/Transform.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2_ros/transform_listener.h>
+#include <tf2_ros/transform_broadcaster.h>
 #include "message_filters/subscriber.h"
-#include "tf/message_filter.h"
+#include <tf2_ros/message_filter.h>
 
 #include "gmapping/gridfastslam/gridslamprocessor.h"
 #include "gmapping/sensor/sensor_base/sensor.h"
@@ -54,10 +56,11 @@ class SlamGMapping
     ros::Publisher sst_;
     ros::Publisher sstm_;
     ros::ServiceServer ss_;
-    tf::TransformListener tf_;
+    tf2_ros::Buffer tf_;
+    boost::shared_ptr<tf2_ros::TransformListener> tfL_;
     message_filters::Subscriber<sensor_msgs::LaserScan>* scan_filter_sub_;
-    tf::MessageFilter<sensor_msgs::LaserScan>* scan_filter_;
-    tf::TransformBroadcaster* tfB_;
+    tf2_ros::MessageFilter<sensor_msgs::LaserScan>* scan_filter_;
+    tf2_ros::TransformBroadcaster* tfB_;
 
     GMapping::GridSlamProcessor* gsp_;
     GMapping::RangeSensor* gsp_laser_;
@@ -65,7 +68,7 @@ class SlamGMapping
     // symmetrical bounds as that's what gmapping expects)
     std::vector<double> laser_angles_;
     // The pose, in the original laser frame, of the corresponding centered laser with z facing up
-    tf::Stamped<tf::Pose> centered_laser_pose_;
+    geometry_msgs::PoseStamped centered_laser_pose_;
     // Depending on the order of the elements in the scan and the orientation of the scan frame,
     // We might need to change the order of the scan
     bool do_reverse_range_;
@@ -78,7 +81,7 @@ class SlamGMapping
     nav_msgs::GetMap::Response map_;
 
     ros::Duration map_update_interval_;
-    tf::Transform map_to_odom_;
+    tf2::Transform map_to_odom_;
     boost::mutex map_to_odom_mutex_;
     boost::mutex map_mutex_;
 
