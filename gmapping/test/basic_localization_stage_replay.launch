@@ -5,5 +5,5 @@
   <!--test time-limit="30" test-name="basic_localization_stage" pkg="gmapping" 
         type="test_map.py" args="90.0"/-->
   <!-- TODO: Fix the rtest to work with replay, for now it's not working -->
-  <test time-limit="30" test-name="map_data_test" pkg="gmapping" type="gmapping-rtest" args="90.0 0.05 4000 4000 0.005 0.010"/>
+  <test time-limit="30" test-name="map_data_test_replay" pkg="gmapping" type="gmapping-rtest" args="90.0 0.05 4000 4000 0.005 0.010"/>
 </launch>
