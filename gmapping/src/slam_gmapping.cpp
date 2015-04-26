@@ -272,12 +272,12 @@ void SlamGMapping::startReplay(const std::string & bag_fname, std::string scan_t
   bag.open(bag_fname, rosbag::bagmode::Read);
   
   std::vector<std::string> topics;
-  std::vector<std::string> topics_scan;
   topics.push_back(std::string("/tf"));
-  rosbag::View view(bag, rosbag::TopicQuery(topics));
-  
-  // Saving all transforms from rosbag into tf buffer
-  foreach(rosbag::MessageInstance const m, view)
+  topics.push_back(scan_topic);
+  rosbag::View viewall(bag, rosbag::TopicQuery(topics));
+
+  std::queue<sensor_msgs::LaserScan::ConstPtr> s_queue;
+  foreach(rosbag::MessageInstance const m, viewall)
   {
     tf::tfMessage::ConstPtr cur_tf = m.instantiate<tf::tfMessage>();
     if (cur_tf != NULL) {
@@ -290,22 +290,34 @@ void SlamGMapping::startReplay(const std::string & bag_fname, std::string scan_t
         tf_.setTransform(stampedTf);
       }
     }
-  }
-  
-  topics_scan.push_back(scan_topic); 
-  rosbag::View viewall(bag, rosbag::TopicQuery(topics_scan));
-  foreach(rosbag::MessageInstance const m, viewall)
-  {
+
     sensor_msgs::LaserScan::ConstPtr s = m.instantiate<sensor_msgs::LaserScan>();
     if (s != NULL) {
       if (!(ros::Time(s->header.stamp)).is_zero())
       {
-        this->laserCallback(s);
+        s_queue.push(s);
       }
       // ignoring un-timestamped tf data 
     }
+
+    // Only process a scan if it has tf data
+    while (!s_queue.empty())
+    {
+      try
+      {
+        tf::StampedTransform t;
+        tf_.lookupTransform(s_queue.front()->header.frame_id, odom_frame_, s_queue.front()->header.stamp, t);
+        this->laserCallback(s_queue.front());
+        s_queue.pop();
+      }
+      // If tf does not have the data yet
+      catch(tf::ExtrapolationException& e)
+      {
+        break;
+      }
+    }
   }
-  
+
   bag.close();
 }
 
