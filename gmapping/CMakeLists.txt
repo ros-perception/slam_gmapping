@@ -53,7 +53,11 @@ if(CATKIN_ENABLE_TESTING)
     http://download.ros.org/data/gmapping/basic_localization_stage_groundtruth.pgm
     DESTINATION ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_SHARE_DESTINATION}/test
     MD5 abf208f721053915145215b18c98f9b3)
-  add_rostest(test/basic_localization_stage.launch)
-  add_rostest(test/basic_localization_stage_replay.launch)
-  add_rostest(test/basic_localization_laser_different_beamcount.test)
+  set(LOCAL_DEPENDENCIES gmapping-rtest ${PROJECT_NAME}_basic_localization_stage_indexed.bag
+     ${PROJECT_NAME}_hallway_slow_2011-03-04-21-41-33.bag
+     ${PROJECT_NAME}_basic_localization_stage_groundtruth.pgm
+  )
+  add_rostest(test/basic_localization_stage.launch DEPENDENCIES ${LOCAL_DEPENDENCIES})
+  add_rostest(test/basic_localization_stage_replay.launch DEPENDENCIES ${LOCAL_DEPENDENCIES})
+  add_rostest(test/basic_localization_laser_different_beamcount.test DEPENDENCIES ${LOCAL_DEPENDENCIES})
 endif()
