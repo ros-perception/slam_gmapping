@@ -34,7 +34,8 @@ main(int argc, char** argv)
     ("scan_topic",  po::value<std::string>()->default_value("/scan") ,"topic that contains the laserScan in the rosbag")
     ("bag_filename", po::value<std::string>()->required(), "ros bag filename") 
     ("seed", po::value<unsigned long int>()->default_value(0), "seed")
-    ("max_duration_buffer", po::value<unsigned long int>()->default_value(99999), "max tf buffer duration") ;
+    ("max_duration_buffer", po::value<unsigned long int>()->default_value(99999), "max tf buffer duration")
+    ("on_done", po::value<std::string>(), "command to execute when done") ;
     
     po::variables_map vm; 
     try 
@@ -71,7 +72,15 @@ main(int argc, char** argv)
     gn.startReplay(bag_fname, scan_topic);
     ROS_INFO("replay stopped.");
 
-    ros::spin(); // wait so user can save the map
+    if ( vm.count("on_done") )
+    {
+        // Run the "on_done" command and then exit
+        system(vm["on_done"].as<std::string>().c_str());
+    }
+    else
+    {
+        ros::spin(); // wait so user can save the map
+    }
     return(0);
     
     
