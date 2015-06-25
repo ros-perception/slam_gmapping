@@ -2,8 +2,8 @@
 Changelog for package gmapping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.3.6 (2015-06-26)
+------------------
 * Don't crash on exit from replay.
 * replay: Add "on_done" command line parameter.
   Example usage:
