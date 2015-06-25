@@ -2,6 +2,49 @@
 Changelog for package gmapping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Don't crash on exit from replay.
+* replay: Add "on_done" command line parameter.
+  Example usage:
+  ros run gmapping slam_gmapping_replay --scan_topic=/scan --bag_filename=/tmp/in.bag --on_done "rosrun map_server map_saver -f foo" _particles:=100 _maxUrange:=10
+* replay: Handle order-of-data-in-bag-file issues better at startup.
+  Silently discard scans at startup that arrive prior to the TF frames
+  required by those scans.
+  TF can't interpolate from non-existant data, so discard scans that
+  arrive with timestamps prior to the first TF frame.  We do this
+  expediently by discarding laser scans that throw
+  ExtrapolationException's until/unless we successfully process our first
+  scan.
+  Similarly, ignore LookupException's at startup.
+* Fix indexing error for inverting scan.
+* add test dependencies
+* get replay test to pass
+* rename test
+* fixing include order
+  removing pointer for Gmapping object
+* Minor Fix thanks to vrabaud comments
+* [new feature] replay on bag file
+  The aim is to provide a way to get exactly the same map after running
+  gmapping multiple times on the same rosbag file. It wasn't possible with the
+  tool 'rosbag play', indeed one missing laser scan could provide really
+  different results.
+  Moreover, this modification allow to process rosbag offline at the maximum
+  speed with the guarantee that all lasers scans are processed. It is
+  useful in automatic tests and when finding optimal gmapping parameters with a script.
+  Example usage:
+  rosrun gmapping slam_gmapping_replay --scan_topic=/scan --bag_filename=/tmp/in.bag _particles:=100 _maxUrange:=10
+  more options:
+  rosrun gmapping slam_gmapping_replay --help
+* spliting init and constructor
+  The objective is to allow future handling of replay offline rosbag files.
+  This commit also add a variable for the seed, with the objective is to allow to
+  have repeateable run (for future offline rosbag replay)
+* Added cfloat include
+* Change arbitrary constant to FLT_EPSILON
+* Added check that scan goes from -x to x
+* Contributors: Laurent GEORGE, Patrick Doyle, Qiao Huang, Vincent Rabaud, Windel Bouwman
+
 1.3.5 (2014-08-28)
 ------------------
 * Fixed typo in slam_gmapping_pr2.launch
