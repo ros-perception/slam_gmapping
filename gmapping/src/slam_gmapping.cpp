@@ -277,7 +277,6 @@ void SlamGMapping::startReplay(const std::string & bag_fname, std::string scan_t
   topics.push_back(scan_topic);
   rosbag::View viewall(bag, rosbag::TopicQuery(topics));
 
-  bool at_startup = true;
   std::queue<sensor_msgs::LaserScan::ConstPtr> s_queue;
   foreach(rosbag::MessageInstance const m, viewall)
   {
@@ -311,27 +310,11 @@ void SlamGMapping::startReplay(const std::string & bag_fname, std::string scan_t
         tf_.lookupTransform(s_queue.front()->header.frame_id, odom_frame_, s_queue.front()->header.stamp, t);
         this->laserCallback(s_queue.front());
         s_queue.pop();
-        at_startup = false;
       }
-      // Drop laser scan if tf does not have the data yet (should only happen at startup)
+      // If tf does not have the data yet
       catch(tf::ExtrapolationException& e)
       {
-        if (at_startup) {
-          s_queue.pop();
-          break;
-        } else {
-          throw e;
-        }
-      }
-      // Try again next time if tf does not have the data for the laser frame yet
-      // (should only happen at startup)
-      catch(tf::LookupException& e)
-      {
-        if (at_startup) {
-          break;
-        } else {
-          throw e;
-        }
+        break;
       }
     }
   }
