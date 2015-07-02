@@ -1,0 +1,5 @@
+<launch>
+  <node pkg="gmapping" type="slam_gmapping_replay" name="slam_gmapping_replay" output="screen"
+        args="--bag_filename $(find gmapping)/test/test_replay_crash.bag --scan_topic /scan"/>
+  <test time-limit="20" test-name="map_data_test_replay" pkg="gmapping" type="gmapping-rtest" args="10.0 0.05 4000 4000 0.0001 0.010"/>
+</launch>

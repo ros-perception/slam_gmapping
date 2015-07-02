@@ -298,6 +298,9 @@ void SlamGMapping::startReplay(const std::string & bag_fname, std::string scan_t
       {
         s_queue.push(s);
       }
+      // Just like in live processing, only process the latest 5 scans
+      if (s_queue.size() > 5)
+        s_queue.pop();
       // ignoring un-timestamped tf data 
     }
 
@@ -314,6 +317,12 @@ void SlamGMapping::startReplay(const std::string & bag_fname, std::string scan_t
       // If tf does not have the data yet
       catch(tf::ExtrapolationException& e)
       {
+        ROS_WARN("Wait for TF data: %s", e.what());
+        break;
+      }
+      catch(tf::LookupException& e)
+      {
+        ROS_WARN("TF data incomplete, waiting until data is extracted from the bag (%s)", e.what());
         break;
       }
     }
