@@ -2,6 +2,11 @@
 Changelog for package gmapping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* get replay to behave like live processing
+* Contributors: Vincent Rabaud
+
 1.3.6 (2015-06-26)
 ------------------
 * Don't crash on exit from replay.
