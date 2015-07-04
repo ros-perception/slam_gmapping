@@ -2,8 +2,8 @@
 Changelog for package gmapping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.3.7 (2015-07-04)
+------------------
 * get replay to behave like live processing
 * Contributors: Vincent Rabaud
 
