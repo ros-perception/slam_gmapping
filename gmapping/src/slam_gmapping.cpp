@@ -110,7 +110,6 @@ Initial map dimensions and resolution:
 #include <iostream>
 
 #include <time.h>
-#include <cfloat>
 
 #include "ros/ros.h"
 #include "ros/console.h"
