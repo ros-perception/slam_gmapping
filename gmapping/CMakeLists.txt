@@ -58,8 +58,14 @@ if(CATKIN_ENABLE_TESTING)
     https://github.com/ros-perception/slam_gmapping_test_data/raw/master/test_replay_crash.bag
     DESTINATION ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_SHARE_DESTINATION}/test
     MD5 bb0e086207eb4fccf0b13d3406f610a1)
+  catkin_download_test_data(
+    ${PROJECT_NAME}_test_turtlebot.bag
+    https://github.com/ros-perception/slam_gmapping_test_data/raw/master/test_turtlebot.bag
+    DESTINATION ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_SHARE_DESTINATION}/test
+    MD5 38ec730f35d7d2edad007a3c8bfe897f)
   set(LOCAL_DEPENDENCIES gmapping-rtest ${PROJECT_NAME}_basic_localization_stage_indexed.bag
      ${PROJECT_NAME}_test_replay_crash.bag
+     ${PROJECT_NAME}_test_turtlebot.bag
      ${PROJECT_NAME}_hallway_slow_2011-03-04-21-41-33.bag
      ${PROJECT_NAME}_basic_localization_stage_groundtruth.pgm
      slam_gmapping
@@ -68,5 +74,6 @@ if(CATKIN_ENABLE_TESTING)
   add_rostest(test/basic_localization_stage.launch DEPENDENCIES ${LOCAL_DEPENDENCIES})
   add_rostest(test/basic_localization_stage_replay.launch DEPENDENCIES ${LOCAL_DEPENDENCIES})
   add_rostest(test/basic_localization_stage_replay2.launch DEPENDENCIES ${LOCAL_DEPENDENCIES})
+  add_rostest(test/basic_localization_symmetry.launch DEPENDENCIES ${LOCAL_DEPENDENCIES})
   add_rostest(test/basic_localization_laser_different_beamcount.test DEPENDENCIES ${LOCAL_DEPENDENCIES})
 endif()
