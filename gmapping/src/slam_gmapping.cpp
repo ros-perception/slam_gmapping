@@ -277,7 +277,8 @@ void SlamGMapping::startReplay(const std::string & bag_fname, std::string scan_t
   topics.push_back(scan_topic);
   rosbag::View viewall(bag, rosbag::TopicQuery(topics));
 
-  std::queue<sensor_msgs::LaserScan::ConstPtr> s_queue;
+  // Store up to 5 messages and there error message (if they cannot be processed right away)
+  std::queue<std::pair<sensor_msgs::LaserScan::ConstPtr, std::string> > s_queue;
   foreach(rosbag::MessageInstance const m, viewall)
   {
     tf::tfMessage::ConstPtr cur_tf = m.instantiate<tf::tfMessage>();
@@ -296,11 +297,13 @@ void SlamGMapping::startReplay(const std::string & bag_fname, std::string scan_t
     if (s != NULL) {
       if (!(ros::Time(s->header.stamp)).is_zero())
       {
-        s_queue.push(s);
+        s_queue.push(std::make_pair(s, ""));
       }
       // Just like in live processing, only process the latest 5 scans
-      if (s_queue.size() > 5)
+      if (s_queue.size() > 5) {
+        ROS_WARN_STREAM("Dropping old scan: " << s_queue.front().second);
         s_queue.pop();
+      }
       // ignoring un-timestamped tf data 
     }
 
@@ -310,19 +313,15 @@ void SlamGMapping::startReplay(const std::string & bag_fname, std::string scan_t
       try
       {
         tf::StampedTransform t;
-        tf_.lookupTransform(s_queue.front()->header.frame_id, odom_frame_, s_queue.front()->header.stamp, t);
-        this->laserCallback(s_queue.front());
+        tf_.lookupTransform(s_queue.front().first->header.frame_id, odom_frame_, s_queue.front().first->header.stamp, t);
+        this->laserCallback(s_queue.front().first);
         s_queue.pop();
       }
       // If tf does not have the data yet
-      catch(tf::ExtrapolationException& e)
+      catch(tf2::TransformException& e)
       {
-        ROS_WARN("Wait for TF data: %s", e.what());
-        break;
-      }
-      catch(tf::LookupException& e)
-      {
-        ROS_WARN("TF data incomplete, waiting until data is extracted from the bag (%s)", e.what());
+        // Store the error to display it if we cannot process the data after some time
+        s_queue.front().second = std::string(e.what());
         break;
       }
     }
