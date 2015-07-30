@@ -1,0 +1,5 @@
+<launch>
+  <node pkg="gmapping" type="slam_gmapping_replay" name="slam_gmapping_replay" output="screen"
+        args="--bag_filename $(find gmapping)/test/test_turtlebot.bag --scan_topic /scan"/>
+  <test time-limit="120" test-name="test_symmetry" pkg="gmapping" type="gmapping-rtest" args="90.0 0.05 4000 4000 0.0005 0.010"/>
+</launch>

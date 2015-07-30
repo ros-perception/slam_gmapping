@@ -60,9 +60,14 @@ class SlamGMapping
 
     GMapping::GridSlamProcessor* gsp_;
     GMapping::RangeSensor* gsp_laser_;
-    double gsp_laser_angle_increment_;
-    double angle_min_;
-    double angle_max_;
+    // The angles in the laser, going from -x to x (adjustment is made to get the laser between
+    // symmetrical bounds as that's what gmapping expects)
+    std::vector<double> laser_angles_;
+    // The pose, in the original laser frame, of the corresponding centered laser with z facing up
+    tf::Stamped<tf::Pose> centered_laser_pose_;
+    // Depending on the order of the elements in the scan and the orientation of the scan frame,
+    // We might need to change the order of the scan
+    bool do_reverse_range_;
     unsigned int gsp_laser_beam_count_;
     GMapping::OdometrySensor* gsp_odom_;
 
