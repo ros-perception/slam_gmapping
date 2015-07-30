@@ -1,0 +1,5 @@
+<launch>
+  <node pkg="gmapping" type="slam_gmapping_replay" name="slam_gmapping_replay" output="screen"
+        args="--bag_filename $(find gmapping)/test/test_upside_down.bag --scan_topic /laserscan/fix/raw _base_frame:=base_floor"/>
+  <test time-limit="190" test-name="test_symmetry" pkg="gmapping" type="gmapping-rtest" args="180.0 0.05 4000 4000 0.002 0.010"/>
+</launch>
