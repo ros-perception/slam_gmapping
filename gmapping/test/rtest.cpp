@@ -86,6 +86,7 @@ class MapClientTest : public testing::Test
           free_cnt++;
       }
       double free_ratio = free_cnt / (double)(i);
+      ROS_INFO("Min / ratio / Max free ratio: %f / %f / %f", g_min_free_ratio, free_ratio, g_max_free_ratio);
       EXPECT_GE(free_ratio, g_min_free_ratio);
       EXPECT_LE(free_ratio, g_max_free_ratio);
     }
