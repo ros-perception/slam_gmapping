@@ -2,6 +2,16 @@
 Changelog for package gmapping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* fix a test that would take too long sometimes
+* better verbosity
+* add a test for upside down lasers
+* add a test for symmetry
+* make sure the laser sent to gmapping is always centered
+* do not display warning message if scan is processed at some point
+* Contributors: Vincent Rabaud
+
 1.3.7 (2015-07-04)
 ------------------
 * get replay to behave like live processing
