@@ -2,8 +2,8 @@
 Changelog for package gmapping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.3.8 (2015-07-31)
+------------------
 * fix a test that would take too long sometimes
 * better verbosity
 * add a test for upside down lasers
