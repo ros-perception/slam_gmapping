@@ -66,10 +66,10 @@ Laser Parameters:
 - @b "~/maxRange" @b [double] maximum range of the laser scans. Rays beyond this range get discarded completely. (default: maximum laser range minus 1 cm, as received in the the first LaserScan message)
 - @b "~/maxUrange" @b [double] maximum range of the laser scanner that is used for map building (default: same as maxRange)
 - @b "~/sigma" @b [double] standard deviation for the scan matching process (cell)
-- @b "~/kernelSize" @b [double] search window for the scan matching process
+- @b "~/kernelSize" @b [int] search window for the scan matching process
 - @b "~/lstep" @b [double] initial search step for scan matching (linear)
 - @b "~/astep" @b [double] initial search step for scan matching (angular)
-- @b "~/iterations" @b [double] number of refinement steps in the scan matching. The final "precision" for the match is lstep*2^(-iterations) or astep*2^(-iterations), respectively.
+- @b "~/iterations" @b [int] number of refinement steps in the scan matching. The final "precision" for the match is lstep*2^(-iterations) or astep*2^(-iterations), respectively.
 - @b "~/lsigma" @b [double] standard deviation for the scan matching process (single laser beam)
 - @b "~/ogain" @b [double] gain for smoothing the likelihood
 - @b "~/lskip" @b [int] take only every (n+1)th laser ray for computing a match (0 = take all rays)
