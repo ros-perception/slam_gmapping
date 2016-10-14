@@ -1,0 +1,7 @@
+<library path="lib/libslam_gmapping_nodelet">
+  <class name="SlamGMappingNodelet" type="SlamGMappingNodelet" base_class_type="nodelet::Nodelet">
+  <description>
+  Nodelet ROS wrapper for OpenSlam's Gmapping.
+  </description>
+  </class>
+</library>
