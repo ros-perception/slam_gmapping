@@ -34,6 +34,7 @@ class SlamGMapping
 {
   public:
     SlamGMapping();
+    SlamGMapping(ros::NodeHandle& nh, ros::NodeHandle& pnh);
     SlamGMapping(unsigned long int seed, unsigned long int max_duration_buffer);
     ~SlamGMapping();
 
