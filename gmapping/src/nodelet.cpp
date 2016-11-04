@@ -23,17 +23,17 @@
 class SlamGMappingNodelet : public nodelet::Nodelet
 {
   public:
-    SlamGMappingNodelet()  {};
+    SlamGMappingNodelet()  {}
 
     ~SlamGMappingNodelet() {}
   
     virtual void onInit()
     {
-      NODELET_INFO_STREAM("Initialising nodelet...");
+      NODELET_INFO_STREAM("Initialising Slam GMapping nodelet...");
       sg_.reset(new SlamGMapping(getNodeHandle(), getPrivateNodeHandle()));
       NODELET_INFO_STREAM("Starting live SLAM...");
       sg_->startLiveSlam();
-    };
+    }
 
   private:  
     boost::shared_ptr<SlamGMapping> sg_;
