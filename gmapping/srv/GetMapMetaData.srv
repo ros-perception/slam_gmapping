@@ -1,0 +1,3 @@
+# Get the map metadata as a nav_msgs/MapMetaData
+---
+nav_msgs/MapMetaData metadata

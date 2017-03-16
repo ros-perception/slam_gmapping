@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 project(gmapping)
 
-find_package(catkin REQUIRED nav_msgs nodelet openslam_gmapping roscpp tf rosbag_storage)
+find_package(catkin REQUIRED nav_msgs nodelet openslam_gmapping roscpp tf rosbag_storage message_generation)
 
 find_package(Boost REQUIRED)
 
@@ -9,7 +9,10 @@ include_directories(${Boost_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 
 include_directories(src)
 
-catkin_package()
+add_service_files(DIRECTORY srv FILES GetMapMetaData.srv)
+generate_messages(DEPENDENCIES nav_msgs)
+
+catkin_package(CATKIN_DEPENDS nav_msgs message_runtime)
 
 add_executable(slam_gmapping src/slam_gmapping.cpp src/main.cpp)
 target_link_libraries(slam_gmapping ${Boost_LIBRARIES} ${catkin_LIBRARIES})
