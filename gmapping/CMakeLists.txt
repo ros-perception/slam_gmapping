@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 project(gmapping)
 
-find_package(catkin REQUIRED nav_msgs openslam_gmapping roscpp rostest tf rosbag_storage)
+find_package(catkin REQUIRED nav_msgs openslam_gmapping roscpp tf rosbag_storage)
 
 find_package(Boost REQUIRED signals)
 
@@ -33,6 +33,7 @@ install(TARGETS slam_gmapping slam_gmapping_replay
 )
 
 if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED)
   if(TARGET tests)
     add_executable(gmapping-rtest EXCLUDE_FROM_ALL test/rtest.cpp)
     target_link_libraries(gmapping-rtest ${catkin_LIBRARIES} ${GTEST_LIBRARIES})
