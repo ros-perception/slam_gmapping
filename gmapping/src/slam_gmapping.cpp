@@ -297,6 +297,9 @@ void SlamGMapping::startReplay(const std::string & bag_fname, const std::string 
   std::queue<std::pair<sensor_msgs::LaserScan::ConstPtr, std::string> > s_queue;
   foreach(rosbag::MessageInstance const m, viewall)
   {
+    if (!ros::ok()) {
+      break;
+    }
     tf::tfMessage::ConstPtr cur_tf = m.instantiate<tf::tfMessage>();
     if (cur_tf != NULL) {
       for (size_t i = 0; i < cur_tf->transforms.size(); ++i)
