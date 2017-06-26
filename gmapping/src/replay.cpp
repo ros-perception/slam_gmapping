@@ -32,7 +32,8 @@ main(int argc, char** argv)
     desc.add_options() 
     ("help", "Print help messages") 
     ("scan_topic",  po::value<std::string>()->default_value("/scan") ,"topic that contains the laserScan in the rosbag")
-    ("bag_filename", po::value<std::string>()->required(), "ros bag filename") 
+    ("bag_filename", po::value<std::string>()->required(), "ros bag filename")
+    ("urdf_filename", po::value<std::string>()->default_value(std::string()), "urdf filename")
     ("seed", po::value<unsigned long int>()->default_value(0), "seed")
     ("max_duration_buffer", po::value<unsigned long int>()->default_value(99999), "max tf buffer duration")
     ("on_done", po::value<std::string>(), "command to execute when done") ;
@@ -63,13 +64,14 @@ main(int argc, char** argv)
     } 
     
     std::string bag_fname = vm["bag_filename"].as<std::string>();
+    std::string urdf_fname = vm["urdf_filename"].as<std::string>();
     std::string scan_topic = vm["scan_topic"].as<std::string>();
     unsigned long int seed = vm["seed"].as<unsigned long int>();
     unsigned long int max_duration_buffer = vm["max_duration_buffer"].as<unsigned long int>();
     
     ros::init(argc, argv, "slam_gmapping");
     SlamGMapping gn(seed, max_duration_buffer) ;
-    gn.startReplay(bag_fname, scan_topic);
+    gn.startReplay(bag_fname, urdf_fname, scan_topic);
     ROS_INFO("replay stopped.");
 
     if ( vm.count("on_done") )

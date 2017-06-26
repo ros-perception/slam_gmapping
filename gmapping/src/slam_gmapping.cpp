@@ -106,6 +106,7 @@ Initial map dimensions and resolution:
 
 
 #include "slam_gmapping.h"
+#include "urdf_reader.h"
 
 #include <iostream>
 
@@ -114,6 +115,7 @@ Initial map dimensions and resolution:
 #include "ros/ros.h"
 #include "ros/console.h"
 #include "nav_msgs/MapMetaData.h"
+#include "tf2_ros/static_transform_broadcaster.h"
 
 #include "gmapping/sensor/sensor_range/rangesensor.h"
 #include "gmapping/sensor/sensor_odometry/odometrysensor.h"
@@ -266,7 +268,7 @@ void SlamGMapping::startLiveSlam()
   transform_thread_ = new boost::thread(boost::bind(&SlamGMapping::publishLoop, this, transform_publish_period_));
 }
 
-void SlamGMapping::startReplay(const std::string & bag_fname, std::string scan_topic)
+void SlamGMapping::startReplay(const std::string & bag_fname, const std::string &urdf_fname, std::string scan_topic)
 {
   double transform_publish_period;
   ros::NodeHandle private_nh_("~");
@@ -274,6 +276,14 @@ void SlamGMapping::startReplay(const std::string & bag_fname, std::string scan_t
   sst_ = node_.advertise<nav_msgs::OccupancyGrid>("map", 1, true);
   sstm_ = node_.advertise<nav_msgs::MapMetaData>("map_metadata", 1, true);
   ss_ = node_.advertiseService("dynamic_map", &SlamGMapping::mapCallback, this);
+
+  tf2_ros::StaticTransformBroadcaster static_tf_broadcaster;
+  std::vector<geometry_msgs::TransformStamped> urdf_transforms;
+  if (!urdf_fname.empty()) {
+    urdf_transforms =
+        ReadStaticTransformsFromUrdf(urdf_fname);
+  }
+  static_tf_broadcaster.sendTransform(urdf_transforms);
   
   rosbag::Bag bag;
   bag.open(bag_fname, rosbag::bagmode::Read);
