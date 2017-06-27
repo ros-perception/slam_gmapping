@@ -9,13 +9,16 @@ std::vector<geometry_msgs::TransformStamped> ReadStaticTransformsFromUrdf(
   urdf::Model model;
   model.initFile(urdf_filename);
 #if URDFDOM_HEADERS_HAS_SHARED_PTR_DEFS
-  std::vector<urdf::LinkSharedPtr> links;
+  typedef urdf::LinkSharedPtr LinkSharedPtr;
+  std::vector<LinkSharedPtr> links;
 #else
-  std::vector<boost::shared_ptr<urdf::Link> > links;
+  typedef boost::shared_ptr<urdf::Link> LinkSharedPtr;
+  std::vector<LinkSharedPtr> links;
 #endif
   model.getLinks(links);
   std::vector<geometry_msgs::TransformStamped> transforms;
-  for (const auto& link : links) {
+  for (std::vector<LinkSharedPtr>::iterator it = links.begin(); it != links.end(); it++) {
+    LinkSharedPtr &link = *it;
     if (!link->getParent() || link->parent_joint->type != urdf::Joint::FIXED) {
       continue;
     }
