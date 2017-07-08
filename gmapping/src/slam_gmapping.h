@@ -74,7 +74,7 @@ public:
   void startReplay(const std::string & bag_fname, std::string scan_topic);
   void publishTransform();
 
-  void laserCallback(const std::shared_ptr<sensor_msgs::msg::LaserScan> & scan);
+  void laserCallback(const std::shared_ptr<sensor_msgs::msg::LaserScan> scan);
   bool mapCallback(const std::shared_ptr<nav_msgs::srv::GetMap::Request> req,
                    std::shared_ptr<nav_msgs::srv::GetMap::Response> res);
   void publishLoop(double transform_publish_period);
@@ -125,7 +125,7 @@ private:
   std::string odom_frame_;
 
   void updateMap(const std::shared_ptr<sensor_msgs::msg::LaserScan> scan);
-  bool getOdomPose(GMapping::OrientedPoint& gmap_pose, const rclcpp::Time & t);
+  bool getOdomPose(GMapping::OrientedPoint& gmap_pose, const auto & t);
   bool initMapper(const std::shared_ptr<sensor_msgs::msg::LaserScan> scan);
   bool addScan(const std::shared_ptr<sensor_msgs::msg::LaserScan> scan, GMapping::OrientedPoint & gmap_pose);
   double computePoseEntropy();
