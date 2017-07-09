@@ -355,8 +355,7 @@ SlamGMapping::initMapper(const std::shared_ptr<sensor_msgs::msg::LaserScan> scan
   }
 
   // create a point 1m above the laser position and transform it into the laser-frame
-  tf2::Vector3 v;
-  v.setValue(0, 0, 1 + laser_pose.getOrigin().z());
+  tf2::Vector3 v(0, 0, 1 + laser_pose.getOrigin().z());
   tf2::Stamped<tf2::Vector3> up(v, tf2::TimePoint(), base_frame_);
   try {
     buffer->transform(up, up, laser_frame_);
@@ -584,20 +583,16 @@ SlamGMapping::laserCallback(const std::shared_ptr<sensor_msgs::msg::LaserScan> s
 double
 SlamGMapping::computePoseEntropy()
 {
-  double weight_total=0.0;
-  for(std::vector<GMapping::GridSlamProcessor::Particle>::const_iterator it = gsp_->getParticles().begin();
-      it != gsp_->getParticles().end();
-      ++it)
-  {
-    weight_total += it->weight;
+  double weight_total = 0.0;
+  for(const auto & it : gsp_->getParticles()) {
+    weight_total += it.weight;
   }
+
   double entropy = 0.0;
-  for(std::vector<GMapping::GridSlamProcessor::Particle>::const_iterator it = gsp_->getParticles().begin();
-      it != gsp_->getParticles().end();
-      ++it)
-  {
-    if(it->weight/weight_total > 0.0)
-      entropy += it->weight/weight_total * log(it->weight/weight_total);
+  for(const auto & it : gsp_->getParticles()) {
+    if((it.weight / weight_total) > 0.0) {
+      entropy += it.weight / weight_total * log(it.weight / weight_total);
+    }
   }
   return -entropy;
 }
@@ -733,7 +728,8 @@ void SlamGMapping::publishTransform()
   tmp_tf_stamped.header.frame_id = map_frame_;
   tmp_tf_stamped.child_frame_id = odom_frame_;
   tmp_tf_stamped.header.stamp = tf2_ros::toMsg(tf_expiration);
-  tmp_tf_stamped.transform = tf2::toMsg(map_to_odom_.inverse());;
+  auto thing = map_to_odom_.inverse().inverse();
+  tmp_tf_stamped.transform = tf2::toMsg(thing);
   tfB_->sendTransform(tmp_tf_stamped);
   map_to_odom_mutex_.unlock();
 }
