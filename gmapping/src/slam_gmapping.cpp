@@ -326,9 +326,8 @@ SlamGMapping::getOdomPose(GMapping::OrientedPoint & gmap_pose, const auto & t)
   }
   double yaw, pitch, roll;
   odom_pose.getBasis().getEulerYPR(yaw,pitch,roll);
-  gmap_pose = GMapping::OrientedPoint(odom_pose.getOrigin().x(),
-                                      odom_pose.getOrigin().y(),
-                                      yaw);
+  gmap_pose = GMapping::OrientedPoint(
+      odom_pose.getOrigin().x(), odom_pose.getOrigin().y(), yaw);
   return true;
 }
 
@@ -539,7 +538,7 @@ SlamGMapping::laserCallback(const std::shared_ptr<sensor_msgs::msg::LaserScan> s
   if ((laser_count_ % throttle_scans_) != 0)
     return;
 
-  auto last_map_update = rclcpp::Time::now();
+  auto last_map_update = tf2_ros::fromMsg(rclcpp::Time::now());
 
   // We can't initialize the mapper until we've got the first scan
   if(!got_first_scan_) {
@@ -559,21 +558,27 @@ SlamGMapping::laserCallback(const std::shared_ptr<sensor_msgs::msg::LaserScan> s
     ROS_DEBUG("odom pose: %.3f %.3f %.3f", odom_pose.x, odom_pose.y, odom_pose.theta);
     ROS_DEBUG("correction: %.3f %.3f %.3f", mpose.x - odom_pose.x, mpose.y - odom_pose.y, mpose.theta - odom_pose.theta);
 
-    tf::Transform laser_to_map = tf::Transform(tf::createQuaternionFromRPY(0, 0, mpose.theta), tf::Vector3(mpose.x, mpose.y, 0.0)).inverse();
-    tf::Transform odom_to_laser = tf::Transform(tf::createQuaternionFromRPY(0, 0, odom_pose.theta), tf::Vector3(odom_pose.x, odom_pose.y, 0.0));
+    tf2::Quaternion mpose_q, odom_q;
+    mpose_q.setRPY(0.0, 0.0, mpose.theta);
+    odom_q.setRPY(0.0, 0.0, odom_pose.theta);
+    tf2::Transform laser_to_map =
+        tf2::Transform(mpose_q, tf2::Vector3(mpose.x, mpose.y, 0.0)).inverse();
+    tf2::Transform odom_to_laser =
+        tf2::Transform(odom_q, tf2::Vector3(odom_pose.x, odom_pose.y, 0.0));
 
     map_to_odom_mutex_.lock();
     map_to_odom_ = (odom_to_laser * laser_to_map).inverse();
     map_to_odom_mutex_.unlock();
 
-    if(!got_map_ || (scan->header.stamp - last_map_update) > map_update_interval_)
+    if(!got_map_ || (tf2_ros::fromMsg(scan->header.stamp) - last_map_update) > map_update_interval_)
     {
-      updateMap(*scan);
-      last_map_update = scan->header.stamp;
+      updateMap(scan);
+      last_map_update = tf2_ros::fromMsg(scan->header.stamp);
       ROS_DEBUG("Updated the map");
     }
-  } else
+  } else {
     ROS_DEBUG("cannot process scan");
+  }
 }
 
 double
@@ -598,13 +603,13 @@ SlamGMapping::computePoseEntropy()
 }
 
 void
-SlamGMapping::updateMap(const sensor_msgs::LaserScan& scan)
+SlamGMapping::updateMap(const std::shared_ptr<sensor_msgs::msg::LaserScan> scan)
 {
   ROS_DEBUG("Update map");
-  boost::mutex::scoped_lock map_lock (map_mutex_);
+  std::lock_guard<std::mutex> map_lock (map_mutex_);
   GMapping::ScanMatcher matcher;
 
-  matcher.setLaserParameters(scan.ranges.size(), &(laser_angles_[0]),
+  matcher.setLaserParameters(scan->ranges.size(), &(laser_angles_[0]),
                              gsp_laser_->getPose());
 
   matcher.setlaserMaxRange(maxRange_);
@@ -613,10 +618,10 @@ SlamGMapping::updateMap(const sensor_msgs::LaserScan& scan)
 
   GMapping::GridSlamProcessor::Particle best =
           gsp_->getParticles()[gsp_->getBestParticleIndex()];
-  std_msgs::Float64 entropy;
+  std_msgs::msg::Float64 entropy;
   entropy.data = computePoseEntropy();
   if(entropy.data > 0.0)
-    entropy_publisher_.publish(entropy);
+    entropy_publisher_->publish(entropy);
 
   if(!got_map_) {
     map_.map.info.resolution = delta_;
@@ -656,7 +661,8 @@ SlamGMapping::updateMap(const sensor_msgs::LaserScan& scan)
   }
 
   // the map may have expanded, so resize ros message as well
-  if(map_.map.info.width != (unsigned int) smap.getMapSizeX() || map_.map.info.height != (unsigned int) smap.getMapSizeY()) {
+  if(map_.map.info.width != (unsigned int) smap.getMapSizeX()
+     || map_.map.info.height != (unsigned int) smap.getMapSizeY()) {
 
     // NOTE: The results of ScanMatcherMap::getSize() are different from the parameters given to the constructor
     //       so we must obtain the bounding box in a different way
@@ -677,44 +683,43 @@ SlamGMapping::updateMap(const sensor_msgs::LaserScan& scan)
     ROS_DEBUG("map origin: (%f, %f)", map_.map.info.origin.position.x, map_.map.info.origin.position.y);
   }
 
-  for(int x=0; x < smap.getMapSizeX(); x++)
-  {
-    for(int y=0; y < smap.getMapSizeY(); y++)
-    {
+  int map_size_x = smap.getMapSizeX();
+  int map_size_y = smap.getMapSizeY();
+  for(int x = 0; x < map_size_x; ++x) {
+    for(int y = 0; y < map_size_y; ++y) {
       /// @todo Sort out the unknown vs. free vs. obstacle thresholding
       GMapping::IntPoint p(x, y);
-      double occ=smap.cell(p);
+      double occ = smap.cell(p);
       assert(occ <= 1.0);
-      if(occ < 0)
+      if(occ < 0) {
         map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = -1;
-      else if(occ > occ_thresh_)
-      {
+      } else if(occ > occ_thresh_) {
         //map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = (int)round(occ*100.0);
         map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = 100;
-      }
-      else
+      } else {
         map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = 0;
+      }
     }
   }
   got_map_ = true;
 
   //make sure to set the header information on the map
-  map_.map.header.stamp = ros::Time::now();
-  map_.map.header.frame_id = tf_.resolve( map_frame_ );
+  map_.map.header.stamp = rclcpp::Time::now();
+  map_.map.header.frame_id = map_frame_;
 
-  sst_.publish(map_.map);
-  sstm_.publish(map_.map.info);
+  sst_->publish(map_.map);
+  sstm_->publish(map_.map.info);
 }
 
 bool
-SlamGMapping::mapCallback(nav_msgs::GetMap::Request  &req,
-                          nav_msgs::GetMap::Response &res)
+SlamGMapping::mapCallback(const std::shared_ptr<nav_msgs::srv::GetMap::Request> req,
+                          std::shared_ptr<nav_msgs::srv::GetMap::Response> res)
 {
-  boost::mutex::scoped_lock map_lock (map_mutex_);
-  if(got_map_ && map_.map.info.width && map_.map.info.height)
+    std::lock_guard<std::mutex> map_lock (map_mutex_);
+  if(req != nullptr && got_map_ && map_.map.info.width && map_.map.info.height)
   {
-    res = map_;
-    return true;
+      *res = map_;
+      return true;
   }
   else
     return false;
@@ -723,7 +728,13 @@ SlamGMapping::mapCallback(nav_msgs::GetMap::Request  &req,
 void SlamGMapping::publishTransform()
 {
   map_to_odom_mutex_.lock();
-  ros::Time tf_expiration = ros::Time::now() + ros::Duration(tf_delay_);
-  tfB_->sendTransform( tf::StampedTransform (map_to_odom_, tf_expiration, map_frame_, odom_frame_));
+  auto tf_expiration = tf2_ros::fromMsg(rclcpp::Time::now()) + tf2::durationFromSec(tf_delay_);
+  geometry_msgs::msg::TransformStamped tmp_tf_stamped;
+  tmp_tf_stamped.header.frame_id = map_frame_;
+  tmp_tf_stamped.child_frame_id = odom_frame_;
+  tmp_tf_stamped.header.stamp = tf2_ros::toMsg(tf_expiration);
+  tmp_tf_stamped.transform.translation = map_to_odom_.getTranslation();
+  tmp_tf_stamped.transform.rotation = tf2_ros::toMsg(map_to_odom_.getRotation());
+  tfB_->sendTransform(tmp_tf_stamped);
   map_to_odom_mutex_.unlock();
 }
