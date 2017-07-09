@@ -33,19 +33,20 @@
 #include <nav_msgs/srv/get_map.hpp>
 
 /* tf2_ros */
-#include <tf2_ros/buffer.h>
-#include <tf2_ros/transform_listener.h>
 #include <tf2_ros/transform_broadcaster.h>
+#include <tf2_ros/transform_listener.h>
+#include <tf2_ros/buffer.h>
+#include <tf2/utils.h>
 
 /* ??? */
 /* #include <tf2_ros/message_filter.h> */
 /* #include "message_filters/subscriber.h" */
 
 /* OpenSLAM GMapping */
-#include <gmapping/gridfastslam/gridslamprocessor.h>
-#include <gmapping/sensor/sensor_base/sensor.h>
-#include <gmapping/sensor/sensor_range/rangesensor.h>
 #include <gmapping/sensor/sensor_odometry/odometrysensor.h>
+#include <gmapping/sensor/sensor_range/rangesensor.h>
+#include <gmapping/sensor/sensor_base/sensor.h>
+#include <gmapping/gridfastslam/gridslamprocessor.h>
 
 /* STL includes */
 #include <functional>

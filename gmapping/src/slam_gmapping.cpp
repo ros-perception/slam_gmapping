@@ -733,8 +733,7 @@ void SlamGMapping::publishTransform()
   tmp_tf_stamped.header.frame_id = map_frame_;
   tmp_tf_stamped.child_frame_id = odom_frame_;
   tmp_tf_stamped.header.stamp = tf2_ros::toMsg(tf_expiration);
-  tmp_tf_stamped.transform.translation = map_to_odom_.getTranslation();
-  tmp_tf_stamped.transform.rotation = tf2_ros::toMsg(map_to_odom_.getRotation());
+  tmp_tf_stamped.transform = tf2::toMsg(map_to_odom_.inverse());;
   tfB_->sendTransform(tmp_tf_stamped);
   map_to_odom_mutex_.unlock();
 }
