@@ -14,6 +14,10 @@ find_package(ament_cmake_ros REQUIRED)
 
 set(req_deps
   "nav_msgs"
+  "std_msgs"
+  "sensor_msgs"
+  "std_srvs"
+  "geometry_msgs"
   "openslam_gmapping"
   "rclcpp"
   "rcutils"
@@ -21,8 +25,6 @@ set(req_deps
   "tf2_geometry_msgs"
   "tf2_msgs"
   "tf2_ros"
-  # rostest
-  # rosbag_storage
 )
 ament_auto_find_build_dependencies(REQUIRED ${req_deps})
 
