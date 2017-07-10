@@ -133,6 +133,20 @@ SlamGMapping::SlamGMapping(std::shared_ptr<rclcpp::Node> _node)
   init();
 }
 
+SlamGMapping::~SlamGMapping()
+{
+  if(transform_thread_){
+    transform_thread_->join();
+    delete transform_thread_;
+  }
+
+  delete gsp_;
+  if(gsp_laser_)
+    delete gsp_laser_;
+  if(gsp_odom_)
+    delete gsp_odom_;
+}
+
 void SlamGMapping::init()
 {
   // log4cxx::Logger::getLogger(ROSCONSOLE_DEFAULT_NAME)->setLevel(ros::console::g_level_lookup[ros::console::levels::Debug]);
@@ -286,7 +300,9 @@ void SlamGMapping::startLiveSlam()
 //   bag.close();
 // }
 
-void SlamGMapping::publishLoop(double transform_publish_period){
+void
+SlamGMapping::publishLoop(double transform_publish_period)
+{
   if(transform_publish_period == 0)
     return;
 
@@ -297,20 +313,6 @@ void SlamGMapping::publishLoop(double transform_publish_period){
   }
 }
 
-SlamGMapping::~SlamGMapping()
-{
-  if(transform_thread_){
-    transform_thread_->join();
-    delete transform_thread_;
-  }
-
-  delete gsp_;
-  if(gsp_laser_)
-    delete gsp_laser_;
-  if(gsp_odom_)
-    delete gsp_odom_;
-}
-
 bool
 SlamGMapping::getOdomPose(GMapping::OrientedPoint & gmap_pose, const auto & t)
 {
@@ -319,11 +321,17 @@ SlamGMapping::getOdomPose(GMapping::OrientedPoint & gmap_pose, const auto & t)
   // Get the laser's pose that is centered
   tf2::Stamped<tf2::Transform> odom_pose;
   try {
-    buffer->transform(centered_laser_pose_, odom_pose, odom_frame_);
+    geometry_msgs::msg::TransformStamped odom_pose_msg;
+    buffer->transform(
+      tf2::toMsg<tf2::Stamped<tf2::Transform>, geometry_msgs::msg::TransformStamped>(centered_laser_pose_),
+      odom_pose_msg,
+      odom_frame_);
+    tf2::fromMsg(odom_pose_msg, odom_pose);
   } catch(tf2::TransformException & e) {
     ROS_WARN("Failed to compute odom pose, skipping scan (%s)", e.what());
     return false;
   }
+
   double yaw, pitch, roll;
   odom_pose.getBasis().getEulerYPR(yaw,pitch,roll);
   gmap_pose = GMapping::OrientedPoint(
@@ -339,7 +347,10 @@ SlamGMapping::initMapper(const std::shared_ptr<sensor_msgs::msg::LaserScan> scan
   /* get a staped identity quaternion */
   tf2::Stamped<tf2::Transform> ident(
     tf2::Transform(
-      tf2::Quaternion::getIdentity(), tf2::Vector3(0, 0, 0)), tf2::TimePoint(), laser_frame_);
+      tf2::Quaternion::getIdentity(),
+      tf2::Vector3(0, 0, 0)),
+    tf2_ros::fromMsg(rclcpp::Time::now()),
+    laser_frame_);
   tf2::Stamped<tf2::Transform> laser_pose;
   try {
     geometry_msgs::msg::TransformStamped laser_pose_msg;
@@ -355,11 +366,15 @@ SlamGMapping::initMapper(const std::shared_ptr<sensor_msgs::msg::LaserScan> scan
   }
 
   // create a point 1m above the laser position and transform it into the laser-frame
-  tf2::Vector3 v(0, 0, 1 + laser_pose.getOrigin().z());
-  tf2::Stamped<tf2::Vector3> up(v, tf2::TimePoint(), base_frame_);
+  geometry_msgs::msg::PointStamped up;
+  up.header.stamp = scan->header.stamp;
+  up.header.frame_id = base_frame_;
+  up.point.x = up.point.y = 0;
+  up.point.z = 1 + laser_pose.getOrigin().z();
+
   try {
     buffer->transform(up, up, laser_frame_);
-    ROS_DEBUG("Z-Axis in sensor frame: %.3f", up.z());
+    ROS_DEBUG("Z-Axis in sensor frame: %.3f", up.point.z);
   } catch(tf2::TransformException & e) {
     ROS_WARN("Unable to determine orientation of laser: %s",
              e.what());
@@ -367,10 +382,10 @@ SlamGMapping::initMapper(const std::shared_ptr<sensor_msgs::msg::LaserScan> scan
   }
 
   // gmapping doesnt take roll or pitch into account. So check for correct sensor alignment.
-  if (fabs(fabs(up.z()) - 1) > 0.001)
+  if (fabs(fabs(up.point.z) - 1) > 0.001)
   {
     ROS_WARN("Laser has to be mounted planar! Z-coordinate has to be 1 or -1, but gave: %.5f",
-                 up.z());
+             up.point.z);
     return false;
   }
 
@@ -378,22 +393,21 @@ SlamGMapping::initMapper(const std::shared_ptr<sensor_msgs::msg::LaserScan> scan
 
   double angle_center = (scan->angle_min + scan->angle_max)/2;
 
-  if (up.z() > 0) {
+  if (up.point.z > 0) {
     do_reverse_range_ = scan->angle_min > scan->angle_max;
     tf2::Quaternion q;
-    /*
-     * TODO(allenh1): restore timestamp
-     */
     q.setRPY(0.0, 0.0, angle_center);
+    auto time_stamp = tf2_ros::fromMsg(rclcpp::Time::now());
     centered_laser_pose_ = tf2::Stamped<tf2::Transform>(
-      tf2::Transform(q, tf2::Vector3(0,0,0)), tf2::TimePoint(), laser_frame_);
+      tf2::Transform(q, tf2::Vector3(0,0,0)), time_stamp, laser_frame_);
     ROS_INFO("Laser is mounted upwards.");
   } else {
     tf2::Quaternion q;
     q.setRPY(M_PI, 0, -angle_center);
     do_reverse_range_ = scan->angle_min < scan->angle_max;
+    auto time_stamp = tf2_ros::fromMsg(rclcpp::Time::now());
     centered_laser_pose_ = tf2::Stamped<tf2::Transform>(
-      tf2::Transform(q, tf2::Vector3(0,0,0)), tf2::TimePoint(), laser_frame_);
+      tf2::Transform(q, tf2::Vector3(0,0,0)), time_stamp, laser_frame_);
     ROS_INFO("Laser is mounted upside down.");
   }
 
