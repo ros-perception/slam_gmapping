@@ -19,7 +19,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-#include "slam_gmapping.h"
+#include "slam_gmapping.hpp"
 
 void print_usage()
 {

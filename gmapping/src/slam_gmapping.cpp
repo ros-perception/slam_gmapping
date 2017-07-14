@@ -105,13 +105,11 @@ Initial map dimensions and resolution:
 
 
 
-#include "slam_gmapping.h"
+#include "slam_gmapping.hpp"
 /* #include "ros/console.h" */
 
 /* #include <rosbag/bag.h> */
 /* #include <rosbag/view.h> */
-/* #include <boost/foreach.hpp> */
-/* #define foreach BOOST_FOREACH */
 
 // compute linear index for given map coords
 #define MAP_IDX(sx, i, j) ((sx) * (j) + (i))
