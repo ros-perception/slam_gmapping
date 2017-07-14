@@ -33,6 +33,10 @@ include_directories(src)
 ament_auto_add_executable(slam_gmapping src/slam_gmapping.cpp src/main.cpp)
 ament_target_dependencies(slam_gmapping ${req_deps})
 
+install(
+  TARGETS slam_gmapping
+  DESTINATION lib/${PROJECT_NAME}
+)
 # add_executable(slam_gmapping_replay src/slam_gmapping.cpp src/replay.cpp)
 # ament_target_dependencies(slam_gmapping_replay ${req_deps})
 
