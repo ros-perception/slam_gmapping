@@ -581,6 +581,13 @@ SlamGMapping::addScan(const std::shared_ptr<sensor_msgs::msg::LaserScan> scan, G
 void
 SlamGMapping::laserCallback(const std::shared_ptr<sensor_msgs::msg::LaserScan> scan)
 {
+  if (!buffer->canTransform(odom_frame_,
+                            scan->header.frame_id,
+                            tf2_ros::fromMsg(scan->header.stamp),
+                            tf2::durationFromSec(0.3))) {
+    return;
+  }
+
   laser_count_++;
   if ((laser_count_ % throttle_scans_) != 0)
     return;
