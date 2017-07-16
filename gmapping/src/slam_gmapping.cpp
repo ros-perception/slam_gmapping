@@ -308,7 +308,7 @@ SlamGMapping::publishLoop(double transform_publish_period)
     return;
   }
 
-  rclcpp::rate::Rate r(1 / transform_publish_period);
+  rclcpp::rate::Rate r(1.0 / transform_publish_period);
   while(rclcpp::ok()) {
     publishTransform();
     r.sleep();
@@ -319,7 +319,9 @@ bool
 SlamGMapping::getOdomPose(GMapping::OrientedPoint & gmap_pose, const auto & t)
 {
   // Get the pose of the centered laser at the right time
-  centered_laser_pose_.stamp_ = tf2_ros::fromMsg(t);
+  tf2::TimePoint tp = tf2::TimePoint(
+    std::chrono::seconds(t.sec) + std::chrono::nanoseconds(t.nanosec));
+  centered_laser_pose_.stamp_ = tp;
   // Get the laser's pose that is centered
   tf2::Stamped<tf2::Transform> odom_pose;
   geometry_msgs::msg::TransformStamped odom_pose_msg;
@@ -382,7 +384,8 @@ SlamGMapping::initMapper(const std::shared_ptr<sensor_msgs::msg::LaserScan> scan
     buffer->transform(
       tf2::toMsg<tf2::Stamped<tf2::Transform>, geometry_msgs::msg::TransformStamped>(ident),
       laser_pose_msg,
-      base_frame_
+      base_frame_,
+      tf2::durationFromSec(0.4)
     );
     tf2::fromMsg(laser_pose_msg, laser_pose);
   } catch(tf2::TransformException & e) {
@@ -408,7 +411,7 @@ SlamGMapping::initMapper(const std::shared_ptr<sensor_msgs::msg::LaserScan> scan
   }
 
   // gmapping doesnt take roll or pitch into account. So check for correct sensor alignment.
-  if (std::fabs(up.point.z - 1) > 0.001)
+  if (std::fabs(std::fabs(up.point.z) - 1) > 0.001)
   {
     ROS_WARN("Laser has to be mounted planar! Z-coordinate has to be 1 or -1, but gave: %.5f\n",
              up.point.z);
