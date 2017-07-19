@@ -230,8 +230,9 @@ void SlamGMapping::startLiveSlam()
 /*
  * TODO(allenh1): replay from rosbag. We don't have rosbag yet.
  */
-// void SlamGMapping::startReplay(const std::string & bag_fname, std::string scan_topic)
-// {
+void SlamGMapping::startReplay(const std::string & bag_fname, std::string scan_topic)
+{
+  throw std::runtime_error("The SlamGMapping::startReplay function has not been implemented yet");
 //   double transform_publish_period;
 //   ros::NodeHandle private_nh_("~");
 //   entropy_publisher_ = private_nh_.advertise<std_msgs::Float64>("entropy", 1, true);
@@ -298,7 +299,7 @@ void SlamGMapping::startLiveSlam()
 //   }
 
 //   bag.close();
-// }
+}
 
 void
 SlamGMapping::publishLoop(double transform_publish_period)
@@ -553,11 +554,12 @@ SlamGMapping::addScan(const std::shared_ptr<sensor_msgs::msg::LaserScan> scan, G
     }
   }
 
+  tf2::TimePoint stamp_time = tf2_ros::fromMsg(scan->header.stamp);
+
   GMapping::RangeReading reading(num_ranges,
                                  ranges_double,
                                  gsp_laser_,
-                                 scan->header.stamp.sec
-                                + scan->header.stamp.nanosec / 1.0e-6);
+                                 tf2::timeToSec(stamp_time));
 
   // ...but it deep copies them in RangeReading constructor, so we don't
   // need to keep our array around.
@@ -595,7 +597,7 @@ SlamGMapping::laserCallback(const std::shared_ptr<sensor_msgs::msg::LaserScan> s
   if ((laser_count_ % throttle_scans_) != 0)
     return;
 
-  auto last_map_update = tf2_ros::fromMsg(scan->header.stamp);
+  auto last_map_update = tf2::TimePointZero;
 
   // We can't initialize the mapper until we've got the first scan
   if(!got_first_scan_) {
@@ -628,7 +630,9 @@ SlamGMapping::laserCallback(const std::shared_ptr<sensor_msgs::msg::LaserScan> s
     map_to_odom_ = (odom_to_laser * laser_to_map).inverse();
     map_to_odom_mutex_.unlock();
 
-    if(!got_map_ || (tf2_ros::fromMsg(rclcpp::Time::now()) - last_map_update) > map_update_interval_)
+    tf2::TimePoint stamp_time = tf2_ros::fromMsg(scan->header.stamp);
+
+    if(!got_map_ || (stamp_time - last_map_update) > map_update_interval_)
     {
       updateMap(scan);
       last_map_update = tf2_ros::fromMsg(scan->header.stamp);
@@ -764,7 +768,7 @@ bool
 SlamGMapping::mapCallback(const std::shared_ptr<nav_msgs::srv::GetMap::Request> req,
                           std::shared_ptr<nav_msgs::srv::GetMap::Response> res)
 {
-  /* std::lock_guard<std::mutex> map_lock(map_mutex_); */
+  std::lock_guard<std::mutex> map_lock(map_mutex_);
   if(req != nullptr && got_map_ && map_.map.info.width && map_.map.info.height)
   {
     *res = map_;

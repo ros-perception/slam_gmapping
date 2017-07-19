@@ -33,6 +33,9 @@ include_directories(src)
 ament_auto_add_executable(slam_gmapping src/slam_gmapping.cpp src/main.cpp)
 ament_target_dependencies(slam_gmapping ${req_deps})
 
+# Install launch files
+install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
+
 install(
   TARGETS slam_gmapping
   DESTINATION lib/${PROJECT_NAME}
