@@ -80,14 +80,14 @@ private:
   rclcpp::Publisher<nav_msgs::msg::OccupancyGrid>::SharedPtr sst_;
   rclcpp::Publisher<nav_msgs::msg::MapMetaData>::SharedPtr sstm_;
   rclcpp::service::ServiceBase::SharedPtr ss_;
-  tf2_ros::Buffer * buffer;
-  tf2_ros::TransformListener * tf_;
+  tf2_ros::Buffer * buffer = nullptr;
+  tf2_ros::TransformListener * tf_ = nullptr;
   /* message_filters::Subscriber<sensor_msgs::LaserScan>* scan_filter_sub_; */
   rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr scan_filter_sub_;
   /* tf2_ros::MessageFilter<sensor_msgs::msg::LaserScan> * scan_filter_; */
-  tf2_ros::TransformBroadcaster * tfB_;
+  tf2_ros::TransformBroadcaster * tfB_ = nullptr;
 
-  GMapping::GridSlamProcessor* gsp_;
+  GMapping::GridSlamProcessor* gsp_ = nullptr;
   GMapping::RangeSensor* gsp_laser_ = nullptr;
   // The angles in the laser, going from -x to x (adjustment is made to get the laser between
   // symmetrical bounds as that's what gmapping expects)
