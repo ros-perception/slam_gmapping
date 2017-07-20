@@ -1,7 +1,7 @@
 /*
  * slam_gmapping
- * Copyright (c) 2017, Open Source Robotics Foundation, Inc.
  * Copyright (c) 2008, Willow Garage, Inc.
+ * Copyright (c) 2017, Open Source Robotics Foundation, Inc.
  *
  * THE WORK (AS DEFINED BELOW) IS PROVIDED UNDER THE TERMS OF THIS CREATIVE
  * COMMONS PUBLIC LICENSE ("CCPL" OR "LICENSE"). THE WORK IS PROTECTED BY
@@ -21,6 +21,7 @@
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/time.hpp>
 #include <rcutils/cmdline_parser.h>
+#include <rcutils/logging_macros.h>
 
 /* sensor messages */
 #include <sensor_msgs/msg/laser_scan.hpp>
@@ -55,12 +56,6 @@
 #include <thread>
 #include <mutex>
 #include <ctime>
-
-/* hacky fix for lack of these macros */
-#define ROS_ASSERT assert
-#define ROS_DEBUG printf
-#define ROS_WARN printf
-#define ROS_INFO printf
 
 class SlamGMapping
 {
