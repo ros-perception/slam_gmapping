@@ -2,6 +2,27 @@
 Changelog for package gmapping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* remove unused file
+* add missing nodelet dependency to find_package
+* make rostest in CMakeLists optional (`ros/rosdistro#3010 <https://github.com/ros/rosdistro/issues/3010>`_)
+* Add nodelet implementation. (`#41 <https://github.com/ros-perception/slam_gmapping/issues/41>`_)
+  * Add nodelet implementation.
+  Add additional nodelet layer to mirror the node
+  implementation. This allows the Slam GMapping
+  library to be run as a nodelet instead. This
+  would allow you to, for example, run it under
+  the same nodelet manager as the nodelet producing
+  the /scan output for greater efficiency.
+  * Remove superfluous semicolons
+  Removed superfluous semicolons and
+  mildly clarified info stream output.
+* fix comment, change type from double to int (`#40 <https://github.com/ros-perception/slam_gmapping/issues/40>`_)
+  * fix comment, change type from double to int
+  * fix comment, iterations param is not double but int
+* Contributors: David Hodo, Kevin Wells, Lukas Bulwahn, Oscar Lima, Vincent Rabaud
+
 1.3.8 (2015-07-31)
 ------------------
 * fix a test that would take too long sometimes
