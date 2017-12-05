@@ -32,6 +32,10 @@ install(TARGETS slam_gmapping slam_gmapping_replay
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
+install(FILES nodelet_plugins.xml
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
+)
+
 if(CATKIN_ENABLE_TESTING)
   find_package(rostest REQUIRED)
   if(TARGET tests)
