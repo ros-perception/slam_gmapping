@@ -1,5 +1,6 @@
 /*
  * slam_gmapping
+ * Copyright (c) 2017, Open Source Robotics Foundation, Inc.
  * Copyright (c) 2008, Willow Garage, Inc.
  *
  * THE WORK (AS DEFINED BELOW) IS PROVIDED UNDER THE TERMS OF THIS CREATIVE
@@ -16,19 +17,25 @@
 
 /* Author: Brian Gerkey */
 
-#include <ros/ros.h>
+#include <rclcpp/rclcpp.hpp>
 
-#include "slam_gmapping.h"
+#include "slam_gmapping.hpp"
 
-int
-main(int argc, char** argv)
+void print_usage()
 {
-  ros::init(argc, argv, "slam_gmapping");
+  printf("Usage for slam_gmapping:\n");
+  printf("  TODO(allenh1): fill this in\n");
+}
 
-  SlamGMapping gn;
+int main(int argc, char ** argv)
+{
+  setvbuf(stdout, NULL, _IONBF, BUFSIZ);
+  rclcpp::init(argc, argv);
+  auto node = rclcpp::Node::make_shared("gmapping");
+
+  SlamGMapping gn(node);
   gn.startLiveSlam();
-  ros::spin();
+  rclcpp::spin(node);
 
   return(0);
 }
-
