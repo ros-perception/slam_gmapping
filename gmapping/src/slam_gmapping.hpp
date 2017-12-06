@@ -18,8 +18,10 @@
 /* Author: Brian Gerkey */
 
 /* rclcpp */
+#include <rclcpp/clock.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <rclcpp/time.hpp>
+#include <rclcpp/time_source.hpp>
 #include <rcutils/cmdline_parser.h>
 #include <rcutils/logging_macros.h>
 
@@ -79,7 +81,9 @@ private:
   rclcpp::Publisher<std_msgs::msg::Float64>::SharedPtr entropy_publisher_;
   rclcpp::Publisher<nav_msgs::msg::OccupancyGrid>::SharedPtr sst_;
   rclcpp::Publisher<nav_msgs::msg::MapMetaData>::SharedPtr sstm_;
-  rclcpp::service::ServiceBase::SharedPtr ss_;
+  rclcpp::Service<nav_msgs::srv::GetMap>::SharedPtr ss_;
+  rclcpp::TimeSource timesource;
+  rclcpp::Clock::SharedPtr clock;
   tf2_ros::Buffer * buffer = nullptr;
   tf2_ros::TransformListener * tf_ = nullptr;
   /* message_filters::Subscriber<sensor_msgs::LaserScan>* scan_filter_sub_; */

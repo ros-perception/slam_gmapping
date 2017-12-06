@@ -115,11 +115,13 @@ Initial map dimensions and resolution:
 #define MAP_IDX(sx, i, j) ((sx) * (j) + (i))
 
 SlamGMapping::SlamGMapping(std::shared_ptr<rclcpp::Node> _node)
-: node(_node)
+    : timesource(_node), node(_node)
 {
   tfB_ = new tf2_ros::TransformBroadcaster(node);
   buffer = new tf2_ros::Buffer();
-  auto tf_node = rclcpp::node::Node::make_shared("gmapping_tf");
+  auto tf_node = rclcpp::Node::make_shared("gmapping_tf");
+  clock = std::make_shared<rclcpp::Clock>(RCL_ROS_TIME);
+  timesource.attachClock(clock);
   /* buffer->setUsingDedicatedThread(true); */
   tf_ = new tf2_ros::TransformListener(*buffer, tf_node, true);
   map_to_odom_.setIdentity();
@@ -316,7 +318,7 @@ SlamGMapping::publishLoop(double transform_publish_period)
     return;
   }
 
-  rclcpp::rate::Rate r(1.0 / transform_publish_period);
+  rclcpp::Rate r(1.0 / transform_publish_period);
   while(rclcpp::ok()) {
     publishTransform();
     r.sleep();
@@ -434,7 +436,7 @@ SlamGMapping::initMapper(const std::shared_ptr<sensor_msgs::msg::LaserScan> scan
     do_reverse_range_ = scan->angle_min > scan->angle_max;
     tf2::Quaternion q;
     q.setRPY(0.0, 0.0, angle_center);
-    auto time_stamp = tf2_ros::fromMsg(rclcpp::Time::now());
+    auto time_stamp = tf2_ros::fromMsg(clock->now());
     centered_laser_pose_ = tf2::Stamped<tf2::Transform>(
       tf2::Transform(q, tf2::Vector3(0,0,0)), time_stamp, laser_frame_);
     RCUTILS_LOG_INFO("Laser is mounted upwards.\n");
@@ -442,7 +444,7 @@ SlamGMapping::initMapper(const std::shared_ptr<sensor_msgs::msg::LaserScan> scan
     tf2::Quaternion q;
     q.setRPY(M_PI, 0, -angle_center);
     do_reverse_range_ = scan->angle_min < scan->angle_max;
-    auto time_stamp = tf2_ros::fromMsg(rclcpp::Time::now());
+    auto time_stamp = tf2_ros::fromMsg(clock->now());
     centered_laser_pose_ = tf2::Stamped<tf2::Transform>(
       tf2::Transform(q, tf2::Vector3(0,0,0)), time_stamp, laser_frame_);
     RCUTILS_LOG_INFO("Laser is mounted upside down.\n");
@@ -763,7 +765,7 @@ SlamGMapping::updateMap(const std::shared_ptr<sensor_msgs::msg::LaserScan> scan)
   got_map_ = true;
 
   //make sure to set the header information on the map
-  map_.map.header.stamp = rclcpp::Time::now();
+  map_.map.header.stamp = clock->now();
   map_.map.header.frame_id = map_frame_;
 
   sst_->publish(map_.map);
@@ -786,7 +788,7 @@ SlamGMapping::mapCallback(const std::shared_ptr<nav_msgs::srv::GetMap::Request> 
 void SlamGMapping::publishTransform()
 {
   map_to_odom_mutex_.lock();
-  auto tf_expiration = tf2_ros::fromMsg(rclcpp::Time::now()) + tf2::durationFromSec(tf_delay_);
+  auto tf_expiration = tf2_ros::fromMsg(clock->now()) + tf2::durationFromSec(tf_delay_);
   geometry_msgs::msg::TransformStamped tmp_tf_stamped;
   tmp_tf_stamped.header.frame_id = map_frame_;
   tmp_tf_stamped.child_frame_id = odom_frame_;

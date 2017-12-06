@@ -31,7 +31,7 @@ int main(int argc, char ** argv)
 {
   setvbuf(stdout, NULL, _IONBF, BUFSIZ);
   rclcpp::init(argc, argv);
-  auto node = rclcpp::node::Node::make_shared("gmapping");
+  auto node = rclcpp::Node::make_shared("gmapping");
 
   SlamGMapping gn(node);
   gn.startLiveSlam();
