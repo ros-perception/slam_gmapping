@@ -2,8 +2,8 @@
 Changelog for package gmapping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.3.10 (2018-01-23)
+-------------------
 * Install nodelet plugin descriptor file. (`#56 <https://github.com/ros-perception/slam_gmapping/issues/56>`_)
 * Contributors: Mikael Arguedas, gavanderhoorn
 
