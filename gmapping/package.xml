@@ -7,8 +7,9 @@
   grid map (like a building floorplan) from laser and pose data collected by a mobile robot.
   </description>
   <author>Brian Gerkey</author>
-  <maintainer email="vincent.rabaud@gmail.com">Vincent Rabaud</maintainer>
-  <license>CreativeCommons-by-nc-sa-2.0</license>
+  <maintainer email="ros-orphaned-packages@googlegroups.com">ROS Orphaned Package Maintainers</maintainer>
+  <license>BSD</license>
+  <license>Apache 2.0</license>
 
   <url>http://ros.org/wiki/gmapping</url>
 
