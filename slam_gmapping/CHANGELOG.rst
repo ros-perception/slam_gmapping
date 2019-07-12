@@ -2,8 +2,8 @@
 Changelog for package slam_gmapping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.4.0 (2019-07-12)
+------------------
 * update license to BSD and maintainer to ros-orphaned-packages@googlegroups.com
   since original gmapping source and ROS openslam_gmapping package has been updated to the BSD-3 license, I think we have no reason to use CC for slam_gmapping package
 * Contributors: Kei Okada
