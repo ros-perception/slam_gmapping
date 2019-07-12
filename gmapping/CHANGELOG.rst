@@ -2,6 +2,12 @@
 Changelog for package gmapping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* update license to BSD and maintainer to ros-orphaned-packages@googlegroups.com
+  since original gmapping source and ROS openslam_gmapping package has been updated to the BSD-3 license, I think we have no reason to use CC for slam_gmapping package
+* Contributors: Kei Okada
+
 1.3.10 (2018-01-23)
 -------------------
 * Install nodelet plugin descriptor file. (`#56 <https://github.com/ros-perception/slam_gmapping/issues/56>`_)
