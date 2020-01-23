@@ -462,7 +462,7 @@ SlamGMapping::initMapper(const sensor_msgs::LaserScan& scan)
   else
   {
     do_reverse_range_ = scan.angle_min < scan.angle_max;
-    centered_laser_pose_ = tf::Stamped<tf::Pose>(tf::Transform(tf::createQuaternionFromRPY(M_PI,0,-angle_center),
+    centered_laser_pose_ = tf::Stamped<tf::Pose>(tf::Transform(tf::createQuaternionFromRPY(M_PI,0,angle_center),
                                                                tf::Vector3(0,0,0)), ros::Time::now(), laser_frame_);
     ROS_INFO("Laser is mounted upside down.");
   }
