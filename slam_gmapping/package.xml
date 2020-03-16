@@ -1,6 +1,6 @@
 <package>
   <name>slam_gmapping</name>
-  <version>1.4.0</version>
+  <version>1.4.1</version>
   <description>slam_gmapping contains a wrapper around gmapping which provides SLAM capabilities.</description>
   <author>Brian Gerkey</author>
   <maintainer email="ros-orphaned-packages@googlegroups.com">ROS Orphaned Package Maintainers</maintainer>

@@ -2,8 +2,8 @@
 Changelog for package gmapping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.4.1 (2020-03-16)
+------------------
 * Merge pull request `#85 <https://github.com/ros-perception/slam_gmapping/issues/85>`_ from k-okada/install_nodelet
   install slam_gmapping_nodelet
 * Merge pull request `#87 <https://github.com/ros-perception/slam_gmapping/issues/87>`_ from acxz/patch-1
