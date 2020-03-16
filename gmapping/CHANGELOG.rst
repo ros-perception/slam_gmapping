@@ -2,6 +2,17 @@
 Changelog for package gmapping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Merge pull request `#85 <https://github.com/ros-perception/slam_gmapping/issues/85>`_ from k-okada/install_nodelet
+  install slam_gmapping_nodelet
+* Merge pull request `#87 <https://github.com/ros-perception/slam_gmapping/issues/87>`_ from acxz/patch-1
+  remove signals dep
+* remove signals dep
+  signals is included in boost > 1.70
+* install slam_gmapping_nodelet
+* Contributors: Kei Okada, Michael Ferguson, acxz
+
 1.4.0 (2019-07-12)
 ------------------
 * update license to BSD and maintainer to ros-orphaned-packages@googlegroups.com
