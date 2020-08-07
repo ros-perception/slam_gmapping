@@ -8,7 +8,7 @@ sudo: true
 dist: trusty
 language: python
 python:
-  - "3.4"
+  - "3.6"
 env:
   global:
     - JOB_PATH=/tmp/devel_job
@@ -16,6 +16,7 @@ env:
   matrix:
     - ROS_DISTRO_NAME=kinetic OS_NAME=ubuntu OS_CODE_NAME=xenial ARCH=amd64
     - ROS_DISTRO_NAME=melodic OS_NAME=ubuntu OS_CODE_NAME=bionic ARCH=amd64
+    - ROS_DISTRO_NAME=noetic  OS_NAME=ubuntu OS_CODE_NAME=focal  ARCH=amd64
 #   matrix:
 #     allow_failures:
 #       - env: ROS_DISTRO_NAME=kinetic OS_NAME=ubuntu OS_CODE_NAME=xenial ARCH=amd64
