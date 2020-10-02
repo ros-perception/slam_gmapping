@@ -2,8 +2,8 @@
 Changelog for package gmapping
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.4.2 (2020-10-02)
+------------------
 * change find_package(Boost REQUIRED signales) to find_package(Boost REQUIRED) for noteic (`#84 <https://github.com/ros-perception/slam_gmapping/issues/84>`_)
 * Contributors: Kei Okada
 
