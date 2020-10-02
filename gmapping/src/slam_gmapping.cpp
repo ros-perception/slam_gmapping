@@ -134,10 +134,6 @@ Initial map dimensions and resolution:
 #include <rosbag/bag.h>
 #include <rosbag/view.h>
 #include <boost/foreach.hpp>
-#include <tf2_msgs/TFMessage.h>
-#include <rosgraph_msgs/Clock.h>
-#include <sensor_msgs/LaserScan.h>
-
 #define foreach BOOST_FOREACH
 
 // compute linear index for given map coords
@@ -269,6 +265,7 @@ void SlamGMapping::init()
 
 }
 
+
 void SlamGMapping::startLiveSlam()
 {
   entropy_publisher_ = private_nh_.advertise<std_msgs::Float64>("entropy", 1, true);
@@ -284,12 +281,13 @@ void SlamGMapping::startLiveSlam()
 
 void SlamGMapping::startReplay(const std::string & bag_fname, std::string scan_topic)
 {
+  double transform_publish_period;
   ros::NodeHandle private_nh_("~");
   entropy_publisher_ = private_nh_.advertise<std_msgs::Float64>("entropy", 1, true);
   sst_ = node_.advertise<nav_msgs::OccupancyGrid>("map", 1, true);
   sstm_ = node_.advertise<nav_msgs::MapMetaData>("map_metadata", 1, true);
   ss_ = node_.advertiseService("dynamic_map", &SlamGMapping::mapCallback, this);
-
+  
   rosbag::Bag bag;
   bag.open(bag_fname, rosbag::bagmode::Read);
   
@@ -347,85 +345,9 @@ void SlamGMapping::startReplay(const std::string & bag_fname, std::string scan_t
       }
     }
   }
+
   bag.close();
 }
-
-void SlamGMapping::bagReplay(const std::string & bag_fname)
-{
-  ROS_INFO("Running SLAM in Rosbag Mode (offline)");
-
-  ros::Publisher pub_scan = node_.advertise<sensor_msgs::LaserScan>("scan", 1, true);
-  ros::Publisher pub_tf = node_.advertise<tf2_msgs::TFMessage>("/tf", 1, true);
-  ros::Publisher pub_tf_static = node_.advertise<tf2_msgs::TFMessage>("/tf_static", 1, true);
-  ros::Publisher pub_clock = node_.advertise<rosgraph_msgs::Clock>("/clock",10);
-
-  std::string scan_topic = scan_filter_sub_->getTopic();
-  ROS_INFO("Subscribing to laser rosbag [%s]", scan_topic.c_str());
-
-  rosbag::Bag bag;
-
-  try {
-    ROS_INFO("Opening rosbag [%s]", bag_fname.c_str());
-    bag.open(bag_fname, rosbag::bagmode::Read);
-  } catch (std::exception& ex) {
-    ROS_FATAL("Unable to open rosbag [%s]: %s", bag_fname.c_str(), ex.what());
-  }
-
-  std::vector<std::string> topics;
-  topics.push_back("/tf");
-  topics.push_back("/tf_static");
-  topics.push_back(scan_topic);
-  rosbag::View viewall(bag, rosbag::TopicQuery(topics));
-
-  ros::WallTime start_real_time = ros::WallTime::now();
-  int num_scans = 0;
-
-  foreach(rosbag::MessageInstance const m, viewall)
-  {
-    tf::tfMessage::ConstPtr cur_tf = m.instantiate<tf::tfMessage>();
-    if (cur_tf != NULL) {
-      tf2_msgs::TFMessage msg_tf2;
-      msg_tf2.transforms = cur_tf->transforms;
-      if( m.getTopic() == "/tf" ){
-        pub_tf.publish(msg_tf2);
-      }
-      else if( m.getTopic() == "/tf_static" ){
-        pub_tf_static.publish(msg_tf2);
-      }
-    }
-
-    tf2_msgs::TFMessage::ConstPtr cur_tf2 = m.instantiate<tf2_msgs::TFMessage>();
-    if (cur_tf2 != NULL) {
-      if( m.getTopic() == "/tf" ){
-        pub_tf.publish(cur_tf2);
-      }
-      else if( m.getTopic() == "/tf_static" ){
-        pub_tf_static.publish(cur_tf2);
-      }
-    }
-
-    sensor_msgs::LaserScan::ConstPtr s = m.instantiate<sensor_msgs::LaserScan>();
-    if (s != NULL) {
-      pub_scan.publish(s);
-      num_scans++;
-    }
-
-    rosgraph_msgs::Clock clock_msg;
-    clock_msg.clock = m.getTime();
-    pub_clock.publish( clock_msg );
-
-    ros::spinOnce();
-  }
-  bag.close();
-
-  ros::WallTime real_time = ros::WallTime::now();
-  double delta_real = (real_time - start_real_time).toSec();
-  double delta_sim  = (viewall.getEndTime() - viewall.getBeginTime()).toSec();
-  ROS_INFO("--------- Mapping Completed ---------");
-  ROS_INFO("Processed the rosbag at %.1fX speed.", delta_sim / delta_real);
-  ROS_INFO("Number of processed Laserscan messages: %d", num_scans);
-}
-
 
 void SlamGMapping::publishLoop(double transform_publish_period){
   if(transform_publish_period == 0)

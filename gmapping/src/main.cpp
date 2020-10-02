@@ -40,15 +40,6 @@ main(int argc, char** argv)
 
   SlamGMapping gn;
   gn.startLiveSlam();
-
-  ros::NodeHandle private_nh("~");
-
-  std::string rosbag_filename;
-
-  if(private_nh.getParam("rosbag", rosbag_filename)){
-    gn.bagReplay(rosbag_filename);
-  }
-
   ros::spin();
 
   return(0);
