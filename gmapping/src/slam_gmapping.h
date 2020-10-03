@@ -60,12 +60,14 @@ class SlamGMapping
     bool mapCallback(nav_msgs::GetMap::Request  &req,
                      nav_msgs::GetMap::Response &res);
     void publishLoop(double transform_publish_period);
+    void publishPose(const GMapping::OrientedPoint &mpose);
 
   private:
     ros::NodeHandle node_;
     ros::Publisher entropy_publisher_;
     ros::Publisher sst_;
     ros::Publisher sstm_;
+    ros::Publisher sstp_;
     ros::ServiceServer ss_;
     tf::TransformListener tf_;
     message_filters::Subscriber<sensor_msgs::LaserScan>* scan_filter_sub_;
