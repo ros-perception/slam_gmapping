@@ -32,6 +32,7 @@
 #include <gtest/gtest.h>
 #include <ros/service.h>
 #include <ros/ros.h>
+#include <gmapping/GetMapMetaData.h>
 #include <nav_msgs/GetMap.h>
 #include <nav_msgs/OccupancyGrid.h>
 #include <nav_msgs/MapMetaData.h>
@@ -120,6 +121,16 @@ TEST_F(MapClientTest, subscribe_topic)
   ASSERT_TRUE(got_map_);
   checkMapMetaData(map_->info);
   checkMapData(*(map_.get()));
+}
+
+/* Try to retrieve the map via service, and compare to ground truth */
+TEST_F(MapClientTest, call_service_metadata)
+{
+  gmapping::GetMapMetaData::Request  req;
+  gmapping::GetMapMetaData::Response resp;
+  ASSERT_TRUE(ros::service::waitForService("dynamic_map_metadata", 5000));
+  ASSERT_TRUE(ros::service::call("dynamic_map_metadata", req, resp));
+  checkMapMetaData(resp.metadata);
 }
 
 /* Try to retrieve the metadata via topic, and compare to ground truth */
