@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 project(gmapping)
 
-find_package(catkin REQUIRED nav_msgs nodelet openslam_gmapping roscpp tf rosbag_storage)
+find_package(catkin REQUIRED nav_msgs nodelet openslam_gmapping roscpp tf rosbag_storage urdf)
 
 find_package(Boost REQUIRED signals)
 
@@ -9,19 +9,32 @@ include_directories(${Boost_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 
 include_directories(src)
 
+find_package(urdfdom_headers REQUIRED)
+if(DEFINED urdfdom_headers_VERSION)
+  if(${urdfdom_headers_VERSION} GREATER 0.4.1)
+    add_definitions(-DURDFDOM_HEADERS_HAS_SHARED_PTR_DEFS)
+  endif()
+endif()
+
+include_directories(
+        ${urdfdom_headers_INCLUDE_DIRS}
+)
+
 catkin_package()
 
-add_executable(slam_gmapping src/slam_gmapping.cpp src/main.cpp)
-target_link_libraries(slam_gmapping ${Boost_LIBRARIES} ${catkin_LIBRARIES})
+add_library(lib_slam_gmapping src/slam_gmapping.cpp src/urdf_reader.cpp)
+
+add_executable(slam_gmapping src/main.cpp)
+target_link_libraries(slam_gmapping lib_slam_gmapping ${Boost_LIBRARIES} ${catkin_LIBRARIES})
 if(catkin_EXPORTED_TARGETS)
   add_dependencies(slam_gmapping ${catkin_EXPORTED_TARGETS})
 endif()
 
-add_library(slam_gmapping_nodelet src/slam_gmapping.cpp src/nodelet.cpp)
-target_link_libraries(slam_gmapping_nodelet ${catkin_LIBRARIES})
+add_library(slam_gmapping_nodelet src/nodelet.cpp)
+target_link_libraries(slam_gmapping_nodelet lib_slam_gmapping ${catkin_LIBRARIES})
 
-add_executable(slam_gmapping_replay src/slam_gmapping.cpp src/replay.cpp)
-target_link_libraries(slam_gmapping_replay ${Boost_LIBRARIES} ${catkin_LIBRARIES})
+add_executable(slam_gmapping_replay src/replay.cpp)
+target_link_libraries(slam_gmapping_replay lib_slam_gmapping ${Boost_LIBRARIES} ${catkin_LIBRARIES})
 if(catkin_EXPORTED_TARGETS)
 add_dependencies(slam_gmapping_replay ${catkin_EXPORTED_TARGETS})
 endif()
