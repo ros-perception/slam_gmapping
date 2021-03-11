@@ -3,7 +3,7 @@ project(gmapping)
 
 find_package(catkin REQUIRED nav_msgs nodelet openslam_gmapping roscpp tf rosbag_storage)
 
-find_package(Boost REQUIRED)
+find_package(Boost COMPONENTS thread system program_options REQUIRED)
 
 include_directories(${Boost_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 
