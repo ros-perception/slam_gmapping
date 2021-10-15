@@ -168,11 +168,6 @@ void SlamGMapping::init()
 {
   // log4cxx::Logger::getLogger(ROSCONSOLE_DEFAULT_NAME)->setLevel(ros::console::g_level_lookup[ros::console::levels::Debug]);
 
-  // The library is pretty chatty
-  //gsp_ = new GMapping::GridSlamProcessor(std::cerr);
-  gsp_ = new GMapping::GridSlamProcessor();
-  ROS_ASSERT(gsp_);
-
   tfB_ = new tf::TransformBroadcaster();
   ROS_ASSERT(tfB_);
 
@@ -202,7 +197,7 @@ void SlamGMapping::init()
   map_update_interval_.fromSec(tmp);
   
   // Parameters used by GMapping itself
-  maxUrange_ = 0.0;  maxRange_ = 0.0; // preliminary default, will be set in initMapper()
+  minUrange_ = 0,0; maxUrange_ = 0.0;  maxRange_ = 0.0; // preliminary default, will be set in initMapper()
   if(!private_nh_.getParam("minimumScore", minimum_score_))
     minimum_score_ = 0;
   if(!private_nh_.getParam("sigma", sigma_))
@@ -263,8 +258,23 @@ void SlamGMapping::init()
   if(!private_nh_.getParam("tf_delay", tf_delay_))
     tf_delay_ = transform_publish_period_;
 
-}
+  // setting maxRange and maxUrange here so we can set a reasonable default
+  if(!private_nh_.getParam("maxRange", maxRange_)) 
+    maxRange_ = 30.0;
+  if(!private_nh_.getParam("maxUrange", maxUrange_))
+    maxUrange_ = maxRange_;
+  //Here I define a minimum range for the scan readings. This is to avoid removing map data when the robot passes through
+  if(!private_nh_.getParam("minUrange", minUrange_))
+    minUrange_ = 0.0;
 
+  // The library is pretty chatty
+  //gsp_ = new GMapping::GridSlamProcessor(std::cerr);
+  gsp_ = new GMapping::GridSlamProcessor();
+  ROS_ASSERT(gsp_);
+  gsp_->setMatchingParameters(minUrange_, maxUrange_, maxRange_, sigma_,
+                              kernelSize_, lstep_, astep_, iterations_,
+                              lsigma_, ogain_, lskip_);
+}
 
 void SlamGMapping::startLiveSlam()
 {
@@ -405,6 +415,22 @@ SlamGMapping::getOdomPose(GMapping::OrientedPoint& gmap_pose, const ros::Time& t
 bool
 SlamGMapping::initMapper(const sensor_msgs::LaserScan& scan)
 {
+    ros::NodeHandle private_nh_("~");
+
+    // setting maxRange and maxUrange here so we can set a reasonable default
+  if(!private_nh_.getParam("maxRange", maxRange_))
+    maxRange_ = scan.range_max - 0.01;
+  if(!private_nh_.getParam("maxUrange", maxUrange_))
+    maxUrange_ = maxRange_;
+
+  //Here I define a minimum range for the scan readings. This is to avoid removing map data when the robot passes through
+  if(!private_nh_.getParam("minUrange", minUrange_))
+    minUrange_ = 0.0;
+
+  gsp_->setMatchingParameters(minUrange_, maxUrange_, maxRange_, sigma_,
+                              kernelSize_, lstep_, astep_, iterations_,
+                              lsigma_, ogain_, lskip_);
+
   laser_frame_ = scan.header.frame_id;
   // Get the laser's pose, relative to base.
   tf::Stamped<tf::Pose> ident;
@@ -484,12 +510,6 @@ SlamGMapping::initMapper(const sensor_msgs::LaserScan& scan)
 
   GMapping::OrientedPoint gmap_pose(0, 0, 0);
 
-  // setting maxRange and maxUrange here so we can set a reasonable default
-  ros::NodeHandle private_nh_("~");
-  if(!private_nh_.getParam("maxRange", maxRange_))
-    maxRange_ = scan.range_max - 0.01;
-  if(!private_nh_.getParam("maxUrange", maxUrange_))
-    maxUrange_ = maxRange_;
 
   // The laser must be called "FLASER".
   // We pass in the absolute value of the computed angle increment, on the
@@ -520,9 +540,6 @@ SlamGMapping::initMapper(const sensor_msgs::LaserScan& scan)
     initialPose = GMapping::OrientedPoint(0.0, 0.0, 0.0);
   }
 
-  gsp_->setMatchingParameters(maxUrange_, maxRange_, sigma_,
-                              kernelSize_, lstep_, astep_, iterations_,
-                              lsigma_, ogain_, lskip_);
 
   gsp_->setMotionModelParameters(srr_, srt_, str_, stt_);
   gsp_->setUpdateDistances(linearUpdate_, angularUpdate_, resampleThreshold_);
@@ -677,7 +694,7 @@ SlamGMapping::updateMap(const sensor_msgs::LaserScan& scan)
 {
   ROS_DEBUG("Update map");
   boost::mutex::scoped_lock map_lock (map_mutex_);
-  GMapping::ScanMatcher matcher;
+  GMapping::ScanMatcher matcher(minUrange_);
 
   matcher.setLaserParameters(scan.ranges.size(), &(laser_angles_[0]),
                              gsp_laser_->getPose());

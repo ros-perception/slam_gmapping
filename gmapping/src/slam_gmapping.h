@@ -114,6 +114,7 @@ class SlamGMapping
     // Parameters used by GMapping
     double maxRange_;
     double maxUrange_;
+    double minUrange_;
     double maxrange_;
     double minimum_score_;
     double sigma_;
