@@ -17,7 +17,7 @@
     <param name="base_frame" value="base_link"/>
     <param name="odom_frame" value="odom"/>
     <param name="map_update_interval" value="15.0"/>
-    <param name="minUrange" value="1.0"/>
+    <param name="minUrange" value="1.5"/>
     <param name="maxUrange" value="6.0"/> <!-- 6.5 -->
     <param name="maxRange" value="30.0"/>
     <param name="sigma" value="0.1"/>
