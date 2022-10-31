@@ -1,0 +1,109 @@
+# Makefile generico per shared object
+export VERBOSE
+export CXX
+
+# Nome del package
+PACKAGE=$(notdir $(shell pwd))
+
+# Libreria da generare:
+# Se non si setta la variabile LIBNAME la libreria si chiama
+# come la directory
+ifndef LIBNAME
+LIBNAME=$(PACKAGE)
+endif
+
+ifeq ($(MACOSX),1)
+SONAME=$(LIBDIR)/lib$(LIBNAME).dylib
+endif
+
+ifeq ($(LINUX),1)
+SONAME=$(LIBDIR)/lib$(LIBNAME).so
+endif
+
+APPLICATIONS= $(foreach a, $(APPS),$(BINDIR)/$(a))
+INSTALL_SCRIPTS=$(foreach a, $(SCRIPTS),$(BINDIR)/$(a))
+
+all: $(SONAME) $(APPLICATIONS) $(INSTALL_SCRIPTS)
+
+.SECONDARY: $(OBJS) $(COBJS)
+.PHONY:     all clean copy doc
+
+# Generazione della libreria
+$(SONAME): $(OBJS) $(COBJS)
+	@$(MESSAGE) "Creating library lib$(LIBNAME).so"
+ifeq ($(MACOSX),1)
+	@$(PRETTY) "$(CXX) $(LDFLAGS)  -dynamiclib $(OBJS) $(COBJS) -L$(LIBDIR) $(LIBS) -install_name $@ -o $@"
+endif
+ifeq ($(LINUX),1)
+ 	@$(PRETTY) "$(CXX) -fPIC -shared $(OBJS) $(COBJS) -L $(LIBDIR) $(LIBS) $(LDFLAGS) -o $@"
+	@if ! $(PRETTY) "$(TESTLIB) $(SONAME)"; then $(MESSAGE) "Testing of $(SONAME) failed."; rm $(SONAME); exit 1; fi;
+endif
+
+# Generazione delle applicazioni
+$(BINDIR)/%: %.o $(SONAME)
+	@$(MESSAGE) "Linking application `basename "$@"`"
+	@$(PRETTY) "$(CXX) $< -l$(LIBNAME) $(LDFLAGS) -L$(LIBDIR) $(LIBS)  -o $@"
+
+#Generazione dei moc files
+moc_%.cpp:              %.h
+	@$(MESSAGE) "Compiling MOC $@"
+	@$(PRETTY) "$(MOC) -i $< -o $@"
+
+# Generazione degli oggetti
+%.o: %.cpp
+	@$(MESSAGE) "Compiling $<"
+	@$(PRETTY) "$(CXX) -fPIC $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@"
+
+%.o: %.c
+	@$(MESSAGE) "Compiling $<"
+	@$(PRETTY) "$(CC) -fPIC $(CPPFLAGS) $(CFLAGS) -c $< -o $@"
+
+#Regole per la generazione delle dipendenze
+OBJDEPS= $(foreach module,$(basename $(OBJS)),$(module).d) $(foreach a, $(APPS),$(a).d)
+COBJDEPS=$(foreach module,$(basename $(COBJS)),$(module).d)
+
+$(OBJDEPS): %.d: %.cpp
+	@$(MESSAGE) "Generating dependencies for $<"
+	@$(PRETTY) "$(CXX) $(CPPFLAGS) -MM -MG $< -MF $@"
+
+$(COBJDEPS): %.d: %.c
+	@$(MESSAGE) "Generating dependencies for $<"
+	@$(PRETTY) "$(CC)  $(CPPFLAGS) -MM -MG $< -MF $@"
+
+#HEADERS=`ls *.h`
+#PRECOMPILED_HEADERS=$(foreach file,$(basename $(HEADERS)), $(file).pch)
+
+ifneq ($(MAKECMDGOALS),clean)
+ifneq ($(MAKECMDGOALS),copy)
+ifneq ($(MAKECMDGOALS),dep)
+-include $(OBJDEPS) $(COBJDEPS)
+endif
+endif
+endif
+
+dep: $(OBJDEPS) $(COBJDEPS)
+
+
+# GLi script vengono semplicemente copiati
+$(BINDIR)/%.sh: %.sh
+	@$(MESSAGE) "Installing script `basename "$@"`"
+	@$(PRETTY) "cp $< $@"
+	@$(PRETTY) "chmod +x $@"
+
+
+#doc:
+#	rm -rf doc/$(PACKAGE)
+#ifeq ($(strip $(DOCTITLE)),)
+#	kdoc -L doc -d doc/$(PACKAGE) -n "Package $(PACKAGE) (lib$(PACKAGE).so)" $(HEADERS)
+#else
+#	kdoc -L doc -d doc/$(PACKAGE) -n "$(DOCTITLE) (lib$(PACKAGE).so)" $(HEADERS)
+#endif
+
+
+clean:
+	@$(MESSAGE) "Cleaning $(PACKAGE)"
+	@$(PRETTY) "rm -f $(SONAME) $(APPLICATIONS)"
+	@$(PRETTY) "rm -f *.o *.d core *~  moc_*.cpp"
+
+copy:	clean
+	tar -C .. -cvzf `date +../$(PACKAGE)-%d%b%y.tgz` $(PACKAGE)

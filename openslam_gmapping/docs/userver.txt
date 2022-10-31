@@ -1,0 +1,70 @@
+UDP message format
+
+	Basic Message (binaryMessage.h)
+		<identifier>	   (bytes char[32])
+		<timsetamp_sec>    (int32)
+		<timestamp_usec>   (int32)
+		<payload>          <variable>
+	
+	Primitive types
+		The payload may contain the following data types:
+		int8 (char)
+		int16
+		int32
+		int8 [] 
+		int16 []
+		int32 []
+		All the data are serialized in network byte order (htons, htonl)
+		An array is serialized as
+		<size><v1><v2>...<vn>
+		where <size> is an int32, and <v_i> are the values.
+		
+		For converting data look at the functions 
+			fromNetworkByteArray(...)
+			toNetworkByteArray(...)
+		in gnetwork/gformatters.h
+	
+	
+	Other Messages
+		All the message types inherite from the basic message, they change only the payload.
+	
+		laser message
+		robot pose message
+		robot sonar message
+		synchronized laser messages (laser messages with a pose)
+		robot commands (speed and jog)
+		
+		Here are the payload definitions:
+		-laser message: (laserServer/msgudplaser.h)
+			int16[]  ranges //in centimeters
+		
+		-odometry massage: (robotServer/msgudprobot.h)
+			int32 counter         //incremental serial packet counter
+			int32 x               //in mm
+			int32 y               //in mm
+			int32 heading         //in 1/1000 of rad
+			int32 speed           //in mm/s
+			int32 jog             //in 1/1000 of rad/s
+			int32 stall_left      //int32
+			int32 stall_right     //int32
+		
+		-sonar message: (robotServer/msgudprobot.h)
+			we don't use in the camp, if you want take a look at the code
+		
+		-syncServer message payload: (synchServer/msgudpsynchro.h)
+			<laser message><pose message>
+			(both the laser and pose message are in the payload with the basic message header).
+		
+		-robotCommand message: (robotServer/msgudprobot.h)
+			int32[] commands              // the # of parameters should be less than MSG_UDP_ROBOT_MAX_COMMAND_ARGS
+
+
+
+Communication Protocol.
+Server side:
+-client subscription:
+a client is subscripted to the list if it sends any message (also empty) to a server
+-client unsubscription:
+after a timeout the server does not receives a message it unsubscribes the client
+-loop operation
+each cycle the server sends the data to all subscribed clients and processes the messages.

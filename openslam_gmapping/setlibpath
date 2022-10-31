@@ -1,0 +1,35 @@
+# --- !/bin/bash
+
+LIBDIR="`pwd`/lib"
+
+echo "Adding $LIBDIR to library path ... "
+
+
+if [ "$LD_LIBRARY_PATH" ]; then
+	echo "Checking your library path ... "
+	#echo -e "using $LD_LIBRARY_PATH" ;
+	OLDIFS=$IFS ;
+	IFS="$IFS:" ;
+	LIB="" ;
+	for GUESS_USERDIR in $LD_LIBRARY_PATH ; do
+		echo -e -n  "\t$GUESS_USERDIR ... " ;
+		if [ "$LIBDIR" == "$GUESS_USERDIR" ] ; then
+			LIB="$GUESS_USERDIR" ;
+			echo "Ok" ;
+		else
+			echo "skipping" ;
+		fi ;
+	done ;
+	IFS="$OLDIFS" ;
+	if [ "$LIB" == "" ] ; then
+		echo -e -n "\tAdding $LIBDIR to your library path ... " ;
+		LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$LIBDIR" ;
+		echo "Ok" ;
+	fi ;
+else
+	echo -e "LD_LIBRARY_PATH undefined, using $LIBDIR" ;
+	LD_LIBRARY_PATH="$LIBDIR"
+fi
+
+export LD_LIBRARY_PATH ;
+

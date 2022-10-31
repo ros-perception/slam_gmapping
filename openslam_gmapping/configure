@@ -1,0 +1,242 @@
+#!/bin/bash
+#if [ "$UID" = 0 ]; then echo "Please don't run configure as root"; exit 1; fi
+
+LINUX=0
+MACOSX=0
+
+if [ `uname` = "Linux" ]; then
+	LINUX=1
+	OSTYPE=LINUX
+	CPPFLAGS="-DLINUX"
+fi
+if [ `uname` = "Darwin" ]; then
+	MACOSX=1
+	CPPFLAGS="-DMACOSX"
+	OSTYPE=MACOSX
+fi
+
+if [ ! $CXX ]; then
+	echo "No 'CXX' environment variable found, using g++.";
+	CXX="g++"
+fi
+
+if [ ! $CC ]; then
+	echo "No 'CC' environment variable found, using gcc.";
+	CC="gcc"
+fi
+
+if [ ! -x `which $CXX` ]; then
+	echo "Can't execute C++ compiler '$CXX'.";
+	exit 1;
+else	
+	echo "Using C++ compiler: $CXX"
+fi
+
+if [ ! -x `which $CC` ]; then
+	echo "Can't execute C++ compiler '$CC'.";
+	exit 1;
+else	
+	echo "Using C compiler: $CC"
+fi
+
+GCC_VERSION=`$CXX --version`
+
+echo -n "Checking for Qt 3.x ... "
+for GUESS_QTDIR in `ls /usr/lib/ | grep -E "qt3|qt-3"`; do
+	if [ -d /usr/lib/$GUESS_QTDIR/include -a  -d /usr/lib/$GUESS_QTDIR/lib -a -f /usr/lib/$GUESS_QTDIR/bin/moc ]; then
+		QT_INCLUDE="-I /usr/lib/$GUESS_QTDIR/include"
+		QT_LIB="-L /usr/lib/$GUESS_QTDIR/lib -lqt-mt" ;
+		MOC="/usr/lib/$GUESS_QTDIR/bin/moc" ;
+	fi ;
+done ;
+if [ ! "$QT_INCLUDE" ]; then
+	echo -e "\n\n*** Qt 3.x not found.  I'll make some educated guesses.  If this doesn't work, please set QT_INCLUDE, QT_LIB, MOC by hand in the file global.mk.\n\a"
+	#exit 1
+	QT_INCLUDE="-I/usr/include/qt3";
+	QT_LIB="-lqt-mt" ;
+	MOC="moc-qt3" ;
+else
+	echo "Ok" ;
+fi
+
+ARIASUPPORT="0"
+echo -n "Checking for Aria libs "
+for GUESS_ARIADIR in `ls /usr/local/ | grep -E "Aria"`; do
+	if [ -d /usr/local/$GUESS_ARIADIR/include -a  -d /usr/local/$GUESS_ARIADIR/lib ]; then
+		ARIA_INCLUDE="-I/usr/local/$GUESS_ARIADIR/include"
+		ARIA_LIB="-L/usr/local/$GUESS_ARIADIR/lib -lAria"
+		ARIASUPPORT="1"
+	fi ;
+done ;
+
+if [ ! "$ARIA_INCLUDE" ]; then
+	echo -e "\n\n*** ARIA not found, please set ARIA_INCLUDE and ARIA_LIB by hand\n\a"
+else
+	echo "Ok" ;
+fi
+
+#echo -n "Checking for Gsl libs "
+#if [ "$OSTYPE" = "LINUX" ]; then
+#	GSL_LIB="-lgsl -lgslcblas"
+#	GSL_INCLUDE="-I/usr/include/"
+#fi
+#if [ "$OSTYPE" = "MACOSX" ]; then
+#	GSL_LIB="-L/sw/lib -lgsl -lgslcblas"
+#	GSL_INCLUDE="-I/sw/include"
+#fi
+#
+#if [ ! "$GSL_INCLUDE" ]; then
+#	echo -e "\n\n*** GSL not found, please set GSL_INCLUDE and GSL_LIB by hand\n\a"
+#else
+#	echo "Ok" ;
+#fi
+
+
+# echo -n "Checking for KDE 3.x includes ... "
+# for GUESS_KDE_INCLUDE in /usr/include/kde /usr/include/kde3 /opt/kde3/include /opt/kde/include; do
+# 	if [ -d $GUESS_KDE_INCLUDE ]; then
+# 		KDE_INCLUDE="-I$GUESS_KDE_INCLUDE"
+# 	fi ;
+# done ;
+# 
+# if [ ! "$KDE_INCLUDE" ]; then
+# 	echo -e "\n\n*** KDE 3.x includes not found please set KDE_INCLUDE by hand\n\a"
+# 	exit 1
+# else
+# 	echo "Ok" ;
+# fi
+# 
+# echo -n "Checking for KDE 3.x libs ... "
+# for GUESS_KDE_LIB in /usr/lib/kde3 /opt/kde3/lib; do
+# 	if [ -d $GUESS_KDE_LIB ]; then
+# 		KDE_LIB="-L$GUESS_KDE_LIB -lkdeui"
+# 	fi ;
+# done ;
+# 
+# if [ ! "$KDE_LIB" ]; then
+# 	echo -e "\n\n*** KDE 3.x libs not found please set KDE_LIBS by hand\n\a"
+# 	exit 1
+# else
+# 	echo "Ok" ;
+# fi
+
+
+# echo -n "Checking for uic ... "
+# for GUESS_UIC in `ls /usr/bin/ | grep -E "uic|uic3"`; do
+# 	if [ -f /usr/bin/$GUESS_UIC ]; then
+# 		UIC=$GUESS_UIC;
+# 	fi ;
+# done ;
+# 
+# if [ ! "$UIC" ]; then
+# 	echo -e "\n\n*** uic  not found please set UIC by hand\n\a"
+# 	exit 1
+# else
+# 	echo "Ok" ;
+# fi
+
+MAPPING_ROOT=`pwd`
+
+
+BINDIR=$MAPPING_ROOT/bin
+echo -n "Checking bin directory $BINDIR ... "
+if [ ! -d $BINDIR ]; then
+	mkdir $BINDIR
+	echo "created."
+else
+	echo "Ok."
+fi
+
+LIBDIR=$MAPPING_ROOT/lib
+echo -n "Checking lib directory $LIBDIR ... "
+if [ ! -d $LIBDIR ]; then
+	mkdir $LIBDIR
+	echo "created."
+else
+	echo "Ok."
+fi
+
+CARMENFLAG=""
+CARMENSUPPORT="0"
+CARMEN_LIBS="libnavigator_interface.a libipc.a librobot_interface.a liblaser_interface.a libsimulator_interface.a liblocalize_interface.a libreadlog.a libwritelog.a libglobal.a libipc.a" 
+if [ ! "$CARMEN_HOME" ]; then
+	echo -e "Carmen NOT FOUND."
+	echo -e "If you have a carmen version installed please set the"
+	echo -e "CARMEN_HOME variable to the carmen path."
+else
+	if [ -d $CARMEN_HOME ]; then
+		echo -e "carmen found in $CARMEN_HOME, enabling support"
+		CARMENFLAG="-DCARMEN_SUPPORT"
+		echo -e "generating shared objects"
+		for CARMEN_OBJECT in $CARMEN_LIBS ; do
+			if [ -f $CARMEN_HOME/lib/$CARMEN_OBJECT ]; then
+				cp $CARMEN_HOME/lib/$CARMEN_OBJECT $LIBDIR
+				./build_tools/generate_shared_object $LIBDIR/$CARMEN_OBJECT
+				rm $LIBDIR/$CARMEN_OBJECT
+			else
+				echo -e "Compile carmen first "$CARMEN_HOME/lib/$CARMEN_OBJECT"  not found"
+				exit -1
+			fi
+		done;
+		CARMENSUPPORT="1"
+	else
+		echo -e "CARMEN_HOME=$CARMEN_HOME does not exist, disabling support\n"
+	fi
+fi	
+
+CONFIG=global.mk
+rm -f $CONFIG
+
+cat << EOF > $CONFIG
+### You should not need to change anything below.
+LINUX=$LINUX
+MACOSX=$MACOSX
+
+# Compilers
+CC=$CC
+CXX=$CXX
+
+# Paths
+MAPPING_ROOT=$MAPPING_ROOT
+LIBDIR=$LIBDIR
+BINDIR=$BINDIR
+
+# Build tools
+PRETTY=$MAPPING_ROOT/build_tools/pretty_compiler
+MESSAGE=$MAPPING_ROOT/build_tools/message
+TESTLIB=$MAPPING_ROOT/build_tools/testlib
+
+# QT support
+MOC=$MOC
+QT_LIB=$QT_LIB
+QT_INCLUDE=$QT_INCLUDE
+
+# ARIA support
+ARIA_LIB=$ARIA_LIB
+ARIA_INCLUDE=$ARIA_INCLUDE
+
+
+# # KDE support
+# KDE_LIB=$KDE_LIB
+# KDE_INCLUDE=$KDE_INCLUDE
+# UIC=$UIC
+
+# Generic makefiles
+MAKEFILE_GENERIC=$MAPPING_ROOT/build_tools/Makefile.generic-shared-object
+MAKEFILE_APP=$MAPPING_ROOT/build_tools/Makefile.app
+MAKEFILE_SUBDIRS=$MAPPING_ROOT/build_tools/Makefile.subdirs
+
+
+# Flags
+CPPFLAGS+=$CPPFLAGS -I$MAPPING_ROOT $CARMENFLAG
+CXXFLAGS+=$CXXFLAGS
+LDFLAGS+=$LDFLAGS -Xlinker -rpath $MAPPING_ROOT/lib
+CARMENSUPPORT=$CARMENSUPPORT
+ARIASUPPORT=$ARIASUPPORT
+
+$OTHER
+
+include $MAPPING_ROOT/manual.mk
+
+EOF
+

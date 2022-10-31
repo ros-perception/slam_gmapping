@@ -1,0 +1,146 @@
+**WHAT IS THIS
+
+	Mapping is a suite for studying sonar and laser based mapping robotic mapping algorithms.
+	The name is only an attempt, and it will FOR SURE change in the next releases.
+	All of the code has been developed by Giorgio Grisetti <grisetti@dis.uniroma1.it>, and  is
+	released under the GPL license.
+	The software is able to process log files in the Carmen format.
+	In particular in the suite the following packages are provided:
+	1)a scanmatcher based on gradient descent
+	2)a (simple) implementation for landmark based FastSLAM
+	3)a (very cool) grid_fast_slam algorithm 
+	4)a map builder for sonar data, based on forward model.
+
+**REQUIREMENTS:
+
+	an X86 linux machine with 
+		gcc>3.2.x
+		qt, libraries and development > 3.x
+		gsl, gnu scientific libraries > 1.3
+	
+**COMPILING AND INSTALLING:
+
+	What to do for compiling the software:
+	1) uncompress the archive
+		tar -xzvf mapping-xx.tgz
+	2) change into the source directory
+		cd mapping
+	3) set the LD_LIBRARY_PATH variable so that it includes the mapping/lib directory
+		. setlibpath
+	4) generate the configuration files
+		./configure
+	5) compile the software
+		make
+
+	At rhis point the following binaries should have been generated in the mapping/bin directory
+	
+	autoptr_test
+	converter
+	fastslam_test
+	fmp
+	gfs2log
+	gfs_gui
+	gfs_logplayer
+	gfs_test
+	hscanmatch_test
+	log_test
+	particlefilter_test
+	range_bearing
+	scanmatch_test
+	weakness
+	
+	while the mapping/lib directory should contain the following shared objects
+	
+	libconverter.so  
+	libforwardmodel.so  
+	libgui.so  
+	libsensor_base.so      
+	libsensor_range.so
+	libFastSLAM.so   
+	libgridfastslam.so  
+	liblog.so  
+	libsensor_odometry.so  
+	libutils.so
+	
+	Each library is generated from the corresponding directory, in the source tree.
+	Not all of the binaries in mapping/bin are useful, since most of them are test programs for
+	the libraries.
+
+**USING
+
+	In the following we focus on the following tools:
+	-the scanmatcher
+	-the gridfastslam algorithm
+	and the related conversion tools
+
+	SCANMATCHER:
+		the command line for the scan matcher is
+			
+			hscanmatch_test [options] -filename <carmen_log>
+		
+		The rest of the options of the scan matcher are illustrated at the end of the document
+			
+		The scanmatcher generates a file named scanmatched-<carmen_log>, that contains the laser readings and the robot poses corrected.
+		It is possible, suddenly, to process such a file with a tool for generating occupancy grids (like carmen), to obtain the map
+		from the  log file.
+	
+		COMMAND LINE OPTIONS [scanmatcher]
+		
+			Here are the options that can be passed to the command line: <i> integer, <d> double <s> string		
+			-filename <s>		: the input log filename in carmen format
+			-xmax <d> -xmin <d>, 
+			-ymax <d> -ymin <d>	: the map size, in meters
+			-delta	<d>		: the patchsize of the hierarchical map used (default 1m)
+			-patchDelta <d> 	: the map discretization (default 0.1m)
+			-maxrange <d>		: maximum laser range
+			-maxUrange <d>		: maximum laser range usable by the algorithm
+			-regscore <d>		: the registration score for the scan, if over regscore the scan will be not registered in the map
+			-critscore <d> 		: the critical score for the scan, if below cs the scan will be registered in the map using teh odometry.
+						must be lower than regscore.
+			-kernelSize <i>		: the (half) of the size of the convolution kernel (number of grid cells) minus 1 (default 0)
+			-sigma <d>		: the sigma of the convolution gaussian
+			-iterations <i>		: the number of recursive iteration used by the scan matcher
+			-lstep <d>		: the scanmatcher linear search step, in meters
+			-astep	<d>		: the scanmatcher angular search step, in radians
+			-maxMove		: the maximal move allowed in the log among adiacent scans
+	
+	GRIDFASTSLAM:
+	
+		The grid fast slam (gfs) algorithm is the coolest algorithm in the suite.
+		It allows to build maps with a fast slam based algorithm, by adopting a smart choice of the prior distribution.
+		There are three gfs tools here:
+		1) the gui based tool (gfs_gui), which allows to track what is appening while building a map
+		2) the off line tool (gfs_test), which allows to process a carmen log and to produce a *.gfs file (which is the gfs output format),
+		containing all of the informations produced by the algorithm while running
+		3) the gfs2log utility, which converts the gfs outoput file in a log file, tracking the best particle.
+		It is possible to suddenly process the log file in order to obtain the occupancy grid as specified in the scanmatcher.
+		
+		The options of gfs_gui and gfs_test are the same, and moreover, since they are based on the scanmatcher, they accepts all of the options for the scanmatcher.
+		
+		
+		COMMAND LINE OPTIONS [gridfastslam]
+			
+			-outfilename <s>	: the output filename in gfs format;
+			-srr <d>, -srt<d>, 
+			-str <d>, -stt<d>	: the motion model parameters (sigma). see gridfastslam/MotionModel.{h,cpp}
+			-particles <i>		: the number of the particles to be used 
+			-angularUpdate <d>	: the angular update distance, the algorithm executes an update step each time the traveled distance from the last 
+						updates exceed this value;
+			-linearUpdate <d>	: the linear update distance, the algorithm executes an update step each time the traveled distance from the last 
+						updates exceed this value;
+			-lsigma <d>		: sigma of the gaussian for evaluating the likelihood in the correlation based model;
+			-lobsGain		: gain to be used while evaluating the likelihood, for smoothing the resampling effects
+			-lskip			: the laser readings to skip in the likelihood evaluation;
+					parseInt("-mapUpdate", mapUpdateTime);
+					parseFlag("-drawFromObservation", m_drawFromObservation);
+	
+	GFS2LOG:
+		During the operation gfs_gui shows only the binary state of the best particle map cells. This results in a less accurate and less nice map
+		representation that the one allowed by the algorithm (which internally keeps track of the mean of the laser points falling in each cell).
+		In order to recover such a precision it is possible to recover a log from a gfsfile, through the command:
+		
+			gfs2log <gfsfile> <logfile>.
+		
+		and suddenly to recover the occupancy grid from the logfile.
+		
+		

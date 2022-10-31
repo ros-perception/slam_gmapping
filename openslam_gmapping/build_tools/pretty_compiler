@@ -1,0 +1,26 @@
+#!/bin/sh
+
+
+#echo "pretty: verbose = $VERBOSE"
+
+if ($VERBOSE)
+then
+	echo $1;
+	if ! eval $1
+	then
+		echo "Failed command was:"
+		echo $1
+		echo "in directory " `pwd`
+		exit 1
+	fi
+else
+	if ! eval $1
+	then
+		echo "Failed command was:"
+		echo $1
+		echo "in directory " `pwd`
+		exit 1
+	fi
+fi
+
+exit 0

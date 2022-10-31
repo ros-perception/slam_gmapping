@@ -1,0 +1,21 @@
+TODO-List for gmapping (and partly explore)
+--------------------------------------------
+
+open:
+-----
+
+1. implement a working(!) ancestry tree 
+
+2. compute trajectory uncertainty based on the 
+   ancestry tree formula
+
+3. possibility to choose the way the pose uncertainty
+   for a particle set is computed (grid vs set of
+   gaussians)
+
+4. Fix the NAN Problem with the pose uncertainty with gaussians
+   
+done:
+-----
+
+(move the done stuff down here)

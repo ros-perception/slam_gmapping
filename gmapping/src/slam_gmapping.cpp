@@ -30,7 +30,6 @@
 /* Author: Brian Gerkey */
 /* Modified by: Charles DuHadway */
 
-
 /**
 
 @mainpage slam_gmapping
@@ -48,7 +47,7 @@ written to a file using e.g.
 @section topic ROS topics
 
 Subscribes to (name/type):
-- @b "scan"/<a href="../../sensor_msgs/html/classstd__msgs_1_1LaserScan.html">sensor_msgs/LaserScan</a> : data from a laser range scanner 
+- @b "scan"/<a href="../../sensor_msgs/html/classstd__msgs_1_1LaserScan.html">sensor_msgs/LaserScan</a> : data from a laser range scanner
 - @b "/tf": odometry from the robot
 
 
@@ -116,8 +115,6 @@ Initial map dimensions and resolution:
 
 */
 
-
-
 #include "slam_gmapping.h"
 
 #include <iostream>
@@ -139,30 +136,26 @@ Initial map dimensions and resolution:
 // compute linear index for given map coords
 #define MAP_IDX(sx, i, j) ((sx) * (j) + (i))
 
-SlamGMapping::SlamGMapping():
-  map_to_odom_(tf::Transform(tf::createQuaternionFromRPY( 0, 0, 0 ), tf::Point(0, 0, 0 ))),
-  laser_count_(0), private_nh_("~"), scan_filter_sub_(NULL), scan_filter_(NULL), transform_thread_(NULL)
+SlamGMapping::SlamGMapping() : map_to_odom_(tf::Transform(tf::createQuaternionFromRPY(0, 0, 0), tf::Point(0, 0, 0))),
+                               laser_count_(0), private_nh_("~"), scan_filter_sub_(NULL), scan_filter_(NULL), transform_thread_(NULL)
 {
   seed_ = time(NULL);
   init();
 }
 
-SlamGMapping::SlamGMapping(ros::NodeHandle& nh, ros::NodeHandle& pnh):
-  map_to_odom_(tf::Transform(tf::createQuaternionFromRPY( 0, 0, 0 ), tf::Point(0, 0, 0 ))),
-  laser_count_(0),node_(nh), private_nh_(pnh), scan_filter_sub_(NULL), scan_filter_(NULL), transform_thread_(NULL)
+SlamGMapping::SlamGMapping(ros::NodeHandle &nh, ros::NodeHandle &pnh) : map_to_odom_(tf::Transform(tf::createQuaternionFromRPY(0, 0, 0), tf::Point(0, 0, 0))),
+                                                                        laser_count_(0), node_(nh), private_nh_(pnh), scan_filter_sub_(NULL), scan_filter_(NULL), transform_thread_(NULL)
 {
   seed_ = time(NULL);
   init();
 }
 
-SlamGMapping::SlamGMapping(long unsigned int seed, long unsigned int max_duration_buffer):
-  map_to_odom_(tf::Transform(tf::createQuaternionFromRPY( 0, 0, 0 ), tf::Point(0, 0, 0 ))),
-  laser_count_(0), private_nh_("~"), scan_filter_sub_(NULL), scan_filter_(NULL), transform_thread_(NULL),
-  seed_(seed), tf_(ros::Duration(max_duration_buffer))
+SlamGMapping::SlamGMapping(long unsigned int seed, long unsigned int max_duration_buffer) : map_to_odom_(tf::Transform(tf::createQuaternionFromRPY(0, 0, 0), tf::Point(0, 0, 0))),
+                                                                                            laser_count_(0), private_nh_("~"), scan_filter_sub_(NULL), scan_filter_(NULL), transform_thread_(NULL),
+                                                                                            seed_(seed), tf_(ros::Duration(max_duration_buffer))
 {
   init();
 }
-
 
 void SlamGMapping::init()
 {
@@ -176,99 +169,99 @@ void SlamGMapping::init()
 
   got_first_scan_ = false;
   got_map_ = false;
-  
 
-  
   // Parameters used by our GMapping wrapper
-  if(!private_nh_.getParam("throttle_scans", throttle_scans_))
+  if (!private_nh_.getParam("throttle_scans", throttle_scans_))
     throttle_scans_ = 1;
-  if(!private_nh_.getParam("base_frame", base_frame_))
+  if (!private_nh_.getParam("base_frame", base_frame_))
     base_frame_ = "base_link";
-  if(!private_nh_.getParam("map_frame", map_frame_))
+  if (!private_nh_.getParam("map_frame", map_frame_))
     map_frame_ = "map";
-  if(!private_nh_.getParam("odom_frame", odom_frame_))
+  if (!private_nh_.getParam("odom_frame", odom_frame_))
     odom_frame_ = "odom";
 
   private_nh_.param("transform_publish_period", transform_publish_period_, 0.05);
 
   double tmp;
-  if(!private_nh_.getParam("map_update_interval", tmp))
+  if (!private_nh_.getParam("map_update_interval", tmp))
     tmp = 5.0;
   map_update_interval_.fromSec(tmp);
-  
+
   // Parameters used by GMapping itself
-  minUrange_ = 0,0; maxUrange_ = 0.0;  maxRange_ = 0.0; // preliminary default, will be set in initMapper()
-  if(!private_nh_.getParam("minimumScore", minimum_score_))
+  minUrange_ = 0, 0;
+  maxUrange_ = 0.0;
+  maxRange_ = 0.0; // preliminary default, will be set in initMapper()
+  if (!private_nh_.getParam("minimumScore", minimum_score_))
     minimum_score_ = 0;
-  if(!private_nh_.getParam("sigma", sigma_))
+  if (!private_nh_.getParam("sigma", sigma_))
     sigma_ = 0.05;
-  if(!private_nh_.getParam("kernelSize", kernelSize_))
+  if (!private_nh_.getParam("kernelSize", kernelSize_))
     kernelSize_ = 1;
-  if(!private_nh_.getParam("lstep", lstep_))
+  if (!private_nh_.getParam("lstep", lstep_))
     lstep_ = 0.05;
-  if(!private_nh_.getParam("astep", astep_))
+  if (!private_nh_.getParam("astep", astep_))
     astep_ = 0.05;
-  if(!private_nh_.getParam("iterations", iterations_))
+  if (!private_nh_.getParam("iterations", iterations_))
     iterations_ = 5;
-  if(!private_nh_.getParam("lsigma", lsigma_))
+  if (!private_nh_.getParam("lsigma", lsigma_))
     lsigma_ = 0.075;
-  if(!private_nh_.getParam("ogain", ogain_))
+  if (!private_nh_.getParam("ogain", ogain_))
     ogain_ = 3.0;
-  if(!private_nh_.getParam("lskip", lskip_))
+  if (!private_nh_.getParam("lskip", lskip_))
     lskip_ = 0;
-  if(!private_nh_.getParam("srr", srr_))
+  if (!private_nh_.getParam("srr", srr_))
     srr_ = 0.1;
-  if(!private_nh_.getParam("srt", srt_))
+  if (!private_nh_.getParam("srt", srt_))
     srt_ = 0.2;
-  if(!private_nh_.getParam("str", str_))
+  if (!private_nh_.getParam("str", str_))
     str_ = 0.1;
-  if(!private_nh_.getParam("stt", stt_))
+  if (!private_nh_.getParam("stt", stt_))
     stt_ = 0.2;
-  if(!private_nh_.getParam("linearUpdate", linearUpdate_))
+  if (!private_nh_.getParam("linearUpdate", linearUpdate_))
     linearUpdate_ = 1.0;
-  if(!private_nh_.getParam("angularUpdate", angularUpdate_))
+  if (!private_nh_.getParam("angularUpdate", angularUpdate_))
     angularUpdate_ = 0.5;
-  if(!private_nh_.getParam("temporalUpdate", temporalUpdate_))
+  if (!private_nh_.getParam("temporalUpdate", temporalUpdate_))
     temporalUpdate_ = -1.0;
-  if(!private_nh_.getParam("resampleThreshold", resampleThreshold_))
+  if (!private_nh_.getParam("resampleThreshold", resampleThreshold_))
     resampleThreshold_ = 0.5;
-  if(!private_nh_.getParam("particles", particles_))
+  if (!private_nh_.getParam("particles", particles_))
     particles_ = 30;
-  if(!private_nh_.getParam("xmin", xmin_))
+  if (!private_nh_.getParam("xmin", xmin_))
     xmin_ = -100.0;
-  if(!private_nh_.getParam("ymin", ymin_))
+  if (!private_nh_.getParam("ymin", ymin_))
     ymin_ = -100.0;
-  if(!private_nh_.getParam("xmax", xmax_))
+  if (!private_nh_.getParam("xmax", xmax_))
     xmax_ = 100.0;
-  if(!private_nh_.getParam("ymax", ymax_))
+  if (!private_nh_.getParam("ymax", ymax_))
     ymax_ = 100.0;
-  if(!private_nh_.getParam("delta", delta_))
+  if (!private_nh_.getParam("delta", delta_))
     delta_ = 0.05;
-  if(!private_nh_.getParam("occ_thresh", occ_thresh_))
+  if (!private_nh_.getParam("occ_thresh", occ_thresh_))
     occ_thresh_ = 0.25;
-  if(!private_nh_.getParam("llsamplerange", llsamplerange_))
+  if (!private_nh_.getParam("llsamplerange", llsamplerange_))
     llsamplerange_ = 0.01;
-  if(!private_nh_.getParam("llsamplestep", llsamplestep_))
+  if (!private_nh_.getParam("llsamplestep", llsamplestep_))
     llsamplestep_ = 0.01;
-  if(!private_nh_.getParam("lasamplerange", lasamplerange_))
+  if (!private_nh_.getParam("lasamplerange", lasamplerange_))
     lasamplerange_ = 0.005;
-  if(!private_nh_.getParam("lasamplestep", lasamplestep_))
+  if (!private_nh_.getParam("lasamplestep", lasamplestep_))
     lasamplestep_ = 0.005;
-    
-  if(!private_nh_.getParam("tf_delay", tf_delay_))
+
+  if (!private_nh_.getParam("tf_delay", tf_delay_))
     tf_delay_ = transform_publish_period_;
 
   // setting maxRange and maxUrange here so we can set a reasonable default
-  if(!private_nh_.getParam("maxRange", maxRange_)) 
+  if (!private_nh_.getParam("maxRange", maxRange_))
     maxRange_ = 30.0;
-  if(!private_nh_.getParam("maxUrange", maxUrange_))
+  if (!private_nh_.getParam("maxUrange", maxUrange_))
     maxUrange_ = maxRange_;
-  //Here I define a minimum range for the scan readings. This is to avoid removing map data when the robot passes through
-  if(!private_nh_.getParam("minUrange", minUrange_))
+  // Here I define a minimum range for the scan readings. This is to avoid removing map data when the robot passes through
+  if (!private_nh_.getParam("minUrange", minUrange_))
     minUrange_ = 0.0;
 
   // The library is pretty chatty
-  //gsp_ = new GMapping::GridSlamProcessor(std::cerr);
+  // gsp_ = new GMapping::GridSlamProcessor(std::cerr);
   gsp_ = new GMapping::GridSlamProcessor();
   ROS_ASSERT(gsp_);
   gsp_->setMatchingParameters(minUrange_, maxUrange_, maxRange_, sigma_,
@@ -289,7 +282,7 @@ void SlamGMapping::startLiveSlam()
   transform_thread_ = new boost::thread(boost::bind(&SlamGMapping::publishLoop, this, transform_publish_period_));
 }
 
-void SlamGMapping::startReplay(const std::string & bag_fname, std::string scan_topic)
+void SlamGMapping::startReplay(const std::string &bag_fname, std::string scan_topic)
 {
   double transform_publish_period;
   ros::NodeHandle private_nh_("~");
@@ -297,21 +290,22 @@ void SlamGMapping::startReplay(const std::string & bag_fname, std::string scan_t
   sst_ = node_.advertise<nav_msgs::OccupancyGrid>("map", 1, true);
   sstm_ = node_.advertise<nav_msgs::MapMetaData>("map_metadata", 1, true);
   ss_ = node_.advertiseService("dynamic_map", &SlamGMapping::mapCallback, this);
-  
+
   rosbag::Bag bag;
   bag.open(bag_fname, rosbag::bagmode::Read);
-  
+
   std::vector<std::string> topics;
   topics.push_back(std::string("/tf"));
   topics.push_back(scan_topic);
   rosbag::View viewall(bag, rosbag::TopicQuery(topics));
 
   // Store up to 5 messages and there error message (if they cannot be processed right away)
-  std::queue<std::pair<sensor_msgs::LaserScan::ConstPtr, std::string> > s_queue;
-  foreach(rosbag::MessageInstance const m, viewall)
+  std::queue<std::pair<sensor_msgs::LaserScan::ConstPtr, std::string>> s_queue;
+  foreach (rosbag::MessageInstance const m, viewall)
   {
     tf::tfMessage::ConstPtr cur_tf = m.instantiate<tf::tfMessage>();
-    if (cur_tf != NULL) {
+    if (cur_tf != NULL)
+    {
       for (size_t i = 0; i < cur_tf->transforms.size(); ++i)
       {
         geometry_msgs::TransformStamped transformStamped;
@@ -323,17 +317,19 @@ void SlamGMapping::startReplay(const std::string & bag_fname, std::string scan_t
     }
 
     sensor_msgs::LaserScan::ConstPtr s = m.instantiate<sensor_msgs::LaserScan>();
-    if (s != NULL) {
+    if (s != NULL)
+    {
       if (!(ros::Time(s->header.stamp)).is_zero())
       {
         s_queue.push(std::make_pair(s, ""));
       }
       // Just like in live processing, only process the latest 5 scans
-      if (s_queue.size() > 5) {
+      if (s_queue.size() > 5)
+      {
         ROS_WARN_STREAM("Dropping old scan: " << s_queue.front().second);
         s_queue.pop();
       }
-      // ignoring un-timestamped tf data 
+      // ignoring un-timestamped tf data
     }
 
     // Only process a scan if it has tf data
@@ -347,7 +343,7 @@ void SlamGMapping::startReplay(const std::string & bag_fname, std::string scan_t
         s_queue.pop();
       }
       // If tf does not have the data yet
-      catch(tf2::TransformException& e)
+      catch (tf2::TransformException &e)
       {
         // Store the error to display it if we cannot process the data after some time
         s_queue.front().second = std::string(e.what());
@@ -359,12 +355,14 @@ void SlamGMapping::startReplay(const std::string & bag_fname, std::string scan_t
   bag.close();
 }
 
-void SlamGMapping::publishLoop(double transform_publish_period){
-  if(transform_publish_period == 0)
+void SlamGMapping::publishLoop(double transform_publish_period)
+{
+  if (transform_publish_period == 0)
     return;
 
   ros::Rate r(1.0 / transform_publish_period);
-  while(ros::ok()){
+  while (ros::ok())
+  {
     publishTransform();
     r.sleep();
   }
@@ -372,15 +370,16 @@ void SlamGMapping::publishLoop(double transform_publish_period){
 
 SlamGMapping::~SlamGMapping()
 {
-  if(transform_thread_){
+  if (transform_thread_)
+  {
     transform_thread_->join();
     delete transform_thread_;
   }
 
   delete gsp_;
-  if(gsp_laser_)
+  if (gsp_laser_)
     delete gsp_laser_;
-  if(gsp_odom_)
+  if (gsp_odom_)
     delete gsp_odom_;
   if (scan_filter_)
     delete scan_filter_;
@@ -388,8 +387,7 @@ SlamGMapping::~SlamGMapping()
     delete scan_filter_sub_;
 }
 
-bool
-SlamGMapping::getOdomPose(GMapping::OrientedPoint& gmap_pose, const ros::Time& t)
+bool SlamGMapping::getOdomPose(GMapping::OrientedPoint &gmap_pose, const ros::Time &t)
 {
   // Get the pose of the centered laser at the right time
   centered_laser_pose_.stamp_ = t;
@@ -399,7 +397,7 @@ SlamGMapping::getOdomPose(GMapping::OrientedPoint& gmap_pose, const ros::Time& t
   {
     tf_.transformPose(odom_frame_, centered_laser_pose_, odom_pose);
   }
-  catch(tf::TransformException e)
+  catch (tf::TransformException e)
   {
     ROS_WARN("Failed to compute odom pose, skipping scan (%s)", e.what());
     return false;
@@ -412,19 +410,18 @@ SlamGMapping::getOdomPose(GMapping::OrientedPoint& gmap_pose, const ros::Time& t
   return true;
 }
 
-bool
-SlamGMapping::initMapper(const sensor_msgs::LaserScan& scan)
+bool SlamGMapping::initMapper(const sensor_msgs::LaserScan &scan)
 {
-    ros::NodeHandle private_nh_("~");
+  ros::NodeHandle private_nh_("~");
 
-    // setting maxRange and maxUrange here so we can set a reasonable default
-  if(!private_nh_.getParam("maxRange", maxRange_))
+  // setting maxRange and maxUrange here so we can set a reasonable default
+  if (!private_nh_.getParam("maxRange", maxRange_))
     maxRange_ = scan.range_max - 0.01;
-  if(!private_nh_.getParam("maxUrange", maxUrange_))
+  if (!private_nh_.getParam("maxUrange", maxUrange_))
     maxUrange_ = maxRange_;
 
-  //Here I define a minimum range for the scan readings. This is to avoid removing map data when the robot passes through
-  if(!private_nh_.getParam("minUrange", minUrange_))
+  // Here I define a minimum range for the scan readings. This is to avoid removing map data when the robot passes through
+  if (!private_nh_.getParam("minUrange", minUrange_))
     minUrange_ = 0.0;
 
   gsp_->setMatchingParameters(minUrange_, maxUrange_, maxRange_, sigma_,
@@ -442,7 +439,7 @@ SlamGMapping::initMapper(const sensor_msgs::LaserScan& scan)
   {
     tf_.transformPose(base_frame_, ident, laser_pose);
   }
-  catch(tf::TransformException e)
+  catch (tf::TransformException e)
   {
     ROS_WARN("Failed to compute laser pose, aborting initialization (%s)",
              e.what());
@@ -453,53 +450,55 @@ SlamGMapping::initMapper(const sensor_msgs::LaserScan& scan)
   tf::Vector3 v;
   v.setValue(0, 0, 1 + laser_pose.getOrigin().z());
   tf::Stamped<tf::Vector3> up(v, scan.header.stamp,
-                                      base_frame_);
+                              base_frame_);
   try
   {
     tf_.transformPoint(laser_frame_, up, up);
     ROS_DEBUG("Z-Axis in sensor frame: %.3f", up.z());
   }
-  catch(tf::TransformException& e)
+  catch (tf::TransformException &e)
   {
     ROS_WARN("Unable to determine orientation of laser: %s",
              e.what());
     return false;
   }
-  
+
   // gmapping doesnt take roll or pitch into account. So check for correct sensor alignment.
   if (fabs(fabs(up.z()) - 1) > 0.001)
   {
     ROS_WARN("Laser has to be mounted planar! Z-coordinate has to be 1 or -1, but gave: %.5f",
-                 up.z());
+             up.z());
     return false;
   }
 
   gsp_laser_beam_count_ = scan.ranges.size();
 
-  double angle_center = (scan.angle_min + scan.angle_max)/2;
+  double angle_center = (scan.angle_min + scan.angle_max) / 2;
 
   if (up.z() > 0)
   {
     do_reverse_range_ = scan.angle_min > scan.angle_max;
-    centered_laser_pose_ = tf::Stamped<tf::Pose>(tf::Transform(tf::createQuaternionFromRPY(0,0,angle_center),
-                                                               tf::Vector3(0,0,0)), ros::Time::now(), laser_frame_);
+    centered_laser_pose_ = tf::Stamped<tf::Pose>(tf::Transform(tf::createQuaternionFromRPY(0, 0, angle_center),
+                                                               tf::Vector3(0, 0, 0)),
+                                                 ros::Time::now(), laser_frame_);
     ROS_INFO("Laser is mounted upwards.");
   }
   else
   {
     do_reverse_range_ = scan.angle_min < scan.angle_max;
-    centered_laser_pose_ = tf::Stamped<tf::Pose>(tf::Transform(tf::createQuaternionFromRPY(M_PI,0,-angle_center),
-                                                               tf::Vector3(0,0,0)), ros::Time::now(), laser_frame_);
+    centered_laser_pose_ = tf::Stamped<tf::Pose>(tf::Transform(tf::createQuaternionFromRPY(M_PI, 0, -angle_center),
+                                                               tf::Vector3(0, 0, 0)),
+                                                 ros::Time::now(), laser_frame_);
     ROS_INFO("Laser is mounted upside down.");
   }
 
   // Compute the angles of the laser from -x to x, basically symmetric and in increasing order
   laser_angles_.resize(scan.ranges.size());
   // Make sure angles are started so that they are centered
-  double theta = - std::fabs(scan.angle_min - scan.angle_max)/2;
-  for(unsigned int i=0; i<scan.ranges.size(); ++i)
+  double theta = -std::fabs(scan.angle_min - scan.angle_max) / 2;
+  for (unsigned int i = 0; i < scan.ranges.size(); ++i)
   {
-    laser_angles_[i]=theta;
+    laser_angles_[i] = theta;
     theta += std::fabs(scan.angle_increment);
   }
 
@@ -509,7 +508,6 @@ SlamGMapping::initMapper(const sensor_msgs::LaserScan& scan)
             laser_angles_.back(), std::fabs(scan.angle_increment));
 
   GMapping::OrientedPoint gmap_pose(0, 0, 0);
-
 
   // The laser must be called "FLASER".
   // We pass in the absolute value of the computed angle increment, on the
@@ -531,15 +529,13 @@ SlamGMapping::initMapper(const sensor_msgs::LaserScan& scan)
   gsp_odom_ = new GMapping::OdometrySensor(odom_frame_);
   ROS_ASSERT(gsp_odom_);
 
-
   /// @todo Expose setting an initial pose
   GMapping::OrientedPoint initialPose;
-  if(!getOdomPose(initialPose, scan.header.stamp))
+  if (!getOdomPose(initialPose, scan.header.stamp))
   {
     ROS_WARN("Unable to determine inital pose of laser! Starting point will be set to zero.");
     initialPose = GMapping::OrientedPoint(0.0, 0.0, 0.0);
   }
-
 
   gsp_->setMotionModelParameters(srr_, srt_, str_, stt_);
   gsp_->setUpdateDistances(linearUpdate_, angularUpdate_, resampleThreshold_);
@@ -557,43 +553,43 @@ SlamGMapping::initMapper(const sensor_msgs::LaserScan& scan)
   gsp_->setminimumScore(minimum_score_);
 
   // Call the sampling function once to set the seed.
-  GMapping::sampleGaussian(1,seed_);
+  GMapping::sampleGaussian(1, seed_);
 
   ROS_INFO("Initialization complete");
 
   return true;
 }
 
-bool
-SlamGMapping::addScan(const sensor_msgs::LaserScan& scan, GMapping::OrientedPoint& gmap_pose)
+bool SlamGMapping::addScan(const sensor_msgs::LaserScan &scan, GMapping::OrientedPoint &gmap_pose)
 {
-  if(!getOdomPose(gmap_pose, scan.header.stamp))
-     return false;
-  
-  if(scan.ranges.size() != gsp_laser_beam_count_)
+  if (!getOdomPose(gmap_pose, scan.header.stamp))
+    return false;
+
+  if (scan.ranges.size() != gsp_laser_beam_count_)
     return false;
 
   // GMapping wants an array of doubles...
-  double* ranges_double = new double[scan.ranges.size()];
+  double *ranges_double = new double[scan.ranges.size()];
   // If the angle increment is negative, we have to invert the order of the readings.
   if (do_reverse_range_)
   {
     ROS_DEBUG("Inverting scan");
     int num_ranges = scan.ranges.size();
-    for(int i=0; i < num_ranges; i++)
+    for (int i = 0; i < num_ranges; i++)
     {
       // Must filter out short readings, because the mapper won't
-      if(scan.ranges[num_ranges - i - 1] < scan.range_min)
+      if (scan.ranges[num_ranges - i - 1] < scan.range_min)
         ranges_double[i] = (double)scan.range_max;
       else
         ranges_double[i] = (double)scan.ranges[num_ranges - i - 1];
     }
-  } else 
+  }
+  else
   {
-    for(unsigned int i=0; i < scan.ranges.size(); i++)
+    for (unsigned int i = 0; i < scan.ranges.size(); i++)
     {
       // Must filter out short readings, because the mapper won't
-      if(scan.ranges[i] < scan.range_min)
+      if (scan.ranges[i] < scan.range_min)
         ranges_double[i] = (double)scan.range_max;
       else
         ranges_double[i] = (double)scan.ranges[i];
@@ -623,27 +619,31 @@ SlamGMapping::addScan(const sensor_msgs::LaserScan& scan, GMapping::OrientedPoin
   return gsp_->processScan(reading);
 }
 
-void
-SlamGMapping::laserCallback(const sensor_msgs::LaserScan::ConstPtr& scan)
+void SlamGMapping::laserCallback(const sensor_msgs::LaserScan::ConstPtr &scan)
 {
   laser_count_++;
-  if ((laser_count_ % throttle_scans_) != 0)
+  if (((laser_count_ % throttle_scans_) != 0)||(laser_count_ < 20))
     return;
 
-  static ros::Time last_map_update(0,0);
+
+  static ros::Time last_map_update(0, 0);
 
   // We can't initialize the mapper until we've got the first scan
-  if(!got_first_scan_)
+  if (!got_first_scan_)
   {
-    if(!initMapper(*scan))
+    if (!initMapper(*scan))
+    {
+      std::cout << "Couldn't initialize mapper on the first scan. Returning" << std::endl;
       return;
+    }
     got_first_scan_ = true;
   }
 
   GMapping::OrientedPoint odom_pose;
 
-  if(addScan(*scan, odom_pose))
+  if (addScan(*scan, odom_pose))
   {
+    std::cout << "Adding scan..." << std::endl;
     ROS_DEBUG("scan processed");
 
     GMapping::OrientedPoint mpose = gsp_->getParticles()[gsp_->getBestParticleIndex()].pose;
@@ -658,42 +658,42 @@ SlamGMapping::laserCallback(const sensor_msgs::LaserScan::ConstPtr& scan)
     map_to_odom_ = (odom_to_laser * laser_to_map).inverse();
     map_to_odom_mutex_.unlock();
 
-    if(!got_map_ || (scan->header.stamp - last_map_update) > map_update_interval_)
+    if (!got_map_ || (scan->header.stamp - last_map_update) > map_update_interval_)
     {
       updateMap(*scan);
       last_map_update = scan->header.stamp;
       ROS_DEBUG("Updated the map");
     }
-  } else
+  }
+  else
     ROS_DEBUG("cannot process scan");
 }
 
 double
 SlamGMapping::computePoseEntropy()
 {
-  double weight_total=0.0;
-  for(std::vector<GMapping::GridSlamProcessor::Particle>::const_iterator it = gsp_->getParticles().begin();
-      it != gsp_->getParticles().end();
-      ++it)
+  double weight_total = 0.0;
+  for (std::vector<GMapping::GridSlamProcessor::Particle>::const_iterator it = gsp_->getParticles().begin();
+       it != gsp_->getParticles().end();
+       ++it)
   {
     weight_total += it->weight;
   }
   double entropy = 0.0;
-  for(std::vector<GMapping::GridSlamProcessor::Particle>::const_iterator it = gsp_->getParticles().begin();
-      it != gsp_->getParticles().end();
-      ++it)
+  for (std::vector<GMapping::GridSlamProcessor::Particle>::const_iterator it = gsp_->getParticles().begin();
+       it != gsp_->getParticles().end();
+       ++it)
   {
-    if(it->weight/weight_total > 0.0)
-      entropy += it->weight/weight_total * log(it->weight/weight_total);
+    if (it->weight / weight_total > 0.0)
+      entropy += it->weight / weight_total * log(it->weight / weight_total);
   }
   return -entropy;
 }
 
-void
-SlamGMapping::updateMap(const sensor_msgs::LaserScan& scan)
+void SlamGMapping::updateMap(const sensor_msgs::LaserScan &scan)
 {
   ROS_DEBUG("Update map");
-  boost::mutex::scoped_lock map_lock (map_mutex_);
+  boost::mutex::scoped_lock map_lock(map_mutex_);
   GMapping::ScanMatcher matcher(minUrange_);
 
   matcher.setLaserParameters(scan.ranges.size(), &(laser_angles_[0]),
@@ -704,13 +704,14 @@ SlamGMapping::updateMap(const sensor_msgs::LaserScan& scan)
   matcher.setgenerateMap(true);
 
   GMapping::GridSlamProcessor::Particle best =
-          gsp_->getParticles()[gsp_->getBestParticleIndex()];
+      gsp_->getParticles()[gsp_->getBestParticleIndex()];
   std_msgs::Float64 entropy;
   entropy.data = computePoseEntropy();
-  if(entropy.data > 0.0)
+  if (entropy.data > 0.0)
     entropy_publisher_.publish(entropy);
 
-  if(!got_map_) {
+  if (!got_map_)
+  {
     map_.map.info.resolution = delta_;
     map_.map.info.origin.position.x = 0.0;
     map_.map.info.origin.position.y = 0.0;
@@ -719,25 +720,25 @@ SlamGMapping::updateMap(const sensor_msgs::LaserScan& scan)
     map_.map.info.origin.orientation.y = 0.0;
     map_.map.info.origin.orientation.z = 0.0;
     map_.map.info.origin.orientation.w = 1.0;
-  } 
+  }
 
   GMapping::Point center;
-  center.x=(xmin_ + xmax_) / 2.0;
-  center.y=(ymin_ + ymax_) / 2.0;
+  center.x = (xmin_ + xmax_) / 2.0;
+  center.y = (ymin_ + ymax_) / 2.0;
 
-  GMapping::ScanMatcherMap smap(center, xmin_, ymin_, xmax_, ymax_, 
+  GMapping::ScanMatcherMap smap(center, xmin_, ymin_, xmax_, ymax_,
                                 delta_);
 
   ROS_DEBUG("Trajectory tree:");
-  for(GMapping::GridSlamProcessor::TNode* n = best.node;
-      n;
-      n = n->parent)
+  for (GMapping::GridSlamProcessor::TNode *n = best.node;
+       n;
+       n = n->parent)
   {
     ROS_DEBUG("  %.3f %.3f %.3f",
               n->pose.x,
               n->pose.y,
               n->pose.theta);
-    if(!n->reading)
+    if (!n->reading)
     {
       ROS_DEBUG("Reading is NULL");
       continue;
@@ -748,15 +749,18 @@ SlamGMapping::updateMap(const sensor_msgs::LaserScan& scan)
   }
 
   // the map may have expanded, so resize ros message as well
-  if(map_.map.info.width != (unsigned int) smap.getMapSizeX() || map_.map.info.height != (unsigned int) smap.getMapSizeY()) {
+  if (map_.map.info.width != (unsigned int)smap.getMapSizeX() || map_.map.info.height != (unsigned int)smap.getMapSizeY())
+  {
 
     // NOTE: The results of ScanMatcherMap::getSize() are different from the parameters given to the constructor
     //       so we must obtain the bounding box in a different way
     GMapping::Point wmin = smap.map2world(GMapping::IntPoint(0, 0));
     GMapping::Point wmax = smap.map2world(GMapping::IntPoint(smap.getMapSizeX(), smap.getMapSizeY()));
-    xmin_ = wmin.x; ymin_ = wmin.y;
-    xmax_ = wmax.x; ymax_ = wmax.y;
-    
+    xmin_ = wmin.x;
+    ymin_ = wmin.y;
+    xmax_ = wmax.x;
+    ymax_ = wmax.y;
+
     ROS_DEBUG("map size is now %dx%d pixels (%f,%f)-(%f, %f)", smap.getMapSizeX(), smap.getMapSizeY(),
               xmin_, ymin_, xmax_, ymax_);
 
@@ -769,19 +773,19 @@ SlamGMapping::updateMap(const sensor_msgs::LaserScan& scan)
     ROS_DEBUG("map origin: (%f, %f)", map_.map.info.origin.position.x, map_.map.info.origin.position.y);
   }
 
-  for(int x=0; x < smap.getMapSizeX(); x++)
+  for (int x = 0; x < smap.getMapSizeX(); x++)
   {
-    for(int y=0; y < smap.getMapSizeY(); y++)
+    for (int y = 0; y < smap.getMapSizeY(); y++)
     {
       /// @todo Sort out the unknown vs. free vs. obstacle thresholding
       GMapping::IntPoint p(x, y);
-      double occ=smap.cell(p);
+      double occ = smap.cell(p);
       assert(occ <= 1.0);
-      if(occ < 0)
+      if (occ < 0)
         map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = -1;
-      else if(occ > occ_thresh_)
+      else if (occ > occ_thresh_)
       {
-        //map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = (int)round(occ*100.0);
+        // map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = (int)round(occ*100.0);
         map_.map.data[MAP_IDX(map_.map.info.width, x, y)] = 100;
       }
       else
@@ -790,20 +794,19 @@ SlamGMapping::updateMap(const sensor_msgs::LaserScan& scan)
   }
   got_map_ = true;
 
-  //make sure to set the header information on the map
+  // make sure to set the header information on the map
   map_.map.header.stamp = ros::Time::now();
-  map_.map.header.frame_id = tf_.resolve( map_frame_ );
+  map_.map.header.frame_id = tf_.resolve(map_frame_);
 
   sst_.publish(map_.map);
   sstm_.publish(map_.map.info);
 }
 
-bool 
-SlamGMapping::mapCallback(nav_msgs::GetMap::Request  &req,
-                          nav_msgs::GetMap::Response &res)
+bool SlamGMapping::mapCallback(nav_msgs::GetMap::Request &req,
+                               nav_msgs::GetMap::Response &res)
 {
-  boost::mutex::scoped_lock map_lock (map_mutex_);
-  if(got_map_ && map_.map.info.width && map_.map.info.height)
+  boost::mutex::scoped_lock map_lock(map_mutex_);
+  if (got_map_ && map_.map.info.width && map_.map.info.height)
   {
     res = map_;
     return true;
@@ -816,6 +819,6 @@ void SlamGMapping::publishTransform()
 {
   map_to_odom_mutex_.lock();
   ros::Time tf_expiration = ros::Time::now() + ros::Duration(tf_delay_);
-  tfB_->sendTransform( tf::StampedTransform (map_to_odom_, tf_expiration, map_frame_, odom_frame_));
+  tfB_->sendTransform(tf::StampedTransform(map_to_odom_, tf_expiration, map_frame_, odom_frame_));
   map_to_odom_mutex_.unlock();
 }

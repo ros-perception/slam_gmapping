@@ -1,0 +1,16 @@
+export VERBOSE
+
+.PHONY: clean, all
+
+ifeq ($(VERBOSE), 0)
+QUIET=--no-print-directory
+endif
+
+all:
+	@for subdir in $(SUBDIRS); do $(MESSAGE) "Entering $$subdir."; if ! $(MAKE) $(QUIET) -C $$subdir; then  $(MESSAGE) "Compilation in $$subdir failed."; exit 1; fi; done
+
+clean:
+	@for subdir in $(SUBDIRS); do $(MESSAGE) "Entering $$subdir."; $(MAKE) $(QUIET) -C $$subdir clean; done
+
+dep:
+	@for subdir in $(SUBDIRS); do $(MESSAGE) "Entering $$subdir."; $(MAKE) $(QUIET) -C $$subdir dep; done

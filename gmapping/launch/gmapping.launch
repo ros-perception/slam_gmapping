@@ -13,7 +13,7 @@
 
   <rosparam command="load" file="$(arg datum_file)" />  
 
-  <node pkg="gmapping" type="slam_gmapping" name="gmapping" output="screen">
+  <node pkg="gmapping" type="slam_gmapping" name="gmapping" output="screen" respawn="true">
     <param name="base_frame" value="base_link"/>
     <param name="odom_frame" value="odom"/>
     <param name="map_update_interval" value="15.0"/>
@@ -33,7 +33,7 @@
     <param name="srt" value="0.000002"/>
     <param name="str" value="0.000001"/>
     <param name="stt" value="0.000002"/>
-    <param name="linearUpdate" value="0.1"/>
+    <param name="linearUpdate" value="0.5"/>
     <param name="angularUpdate" value="0.436"/>
     <param name="temporalUpdate" value="-1.0"/>
     <param name="resampleThreshold" value="0.5"/>

@@ -1,0 +1,26 @@
+#!/bin/bash
+if [ -z "$1" ]; then
+	echo "Syntax: rtestlib <library>"
+	exit 1
+fi
+
+exit 0
+
+FNAME=`mktemp rtestlibXXXXXX`
+echo "int main() { return 0; }" > $FNAME.cpp
+
+g++ $1 $FNAME.cpp -o $FNAME
+result=$?
+rm -f $FNAME.cpp $FNAME
+
+exit $result
+
+#if g++ $1 $FNAME.cpp -o $FNAME
+#then#
+#	rm -f $FNAME.cpp $FNAME
+#	exit 1
+#else
+#	rm -f $FNAME.cpp $FNAME
+#	exit 0
+#fi
+

@@ -1,0 +1,120 @@
+\documentclass[a4paper]{article}
+\begin{document}
+\title {An Incomplete Scan Matching Tutorial}
+\author{Giorgio Grisetti}
+\maketitle
+In this document we provide an explanation of the basic concepts for developing a
+simple maximum likelihood mapper for laser data.
+We first introduce the notation, then we describe how to compute an occupancy grid map, given a known set od poses. Subsequantly we present a simple gradient based scan matchgin algorithm.
+
+\section{Notation}
+\begin{itemize}
+\item $x_t$: robot pose at time $t$.
+\item $z_t=\underbrace{(z^1_t,\cdots,z^n_t)}_\mathrm{beams}$: 
+scan taken at time $t$.
+\item $u_t$: odometry movement which brings the robot from $x_{t-1}$ to $x_{t}$, $t$.
+\item $m_t=f_t(x,y)\rightarrow[0,1]$ occupancy grid map which can be seen as a function that maps each point in the probability of being occupied.
+\end{itemize}
+
+\section{The Scan Matching Problem}
+A scan matching algorithm works in two steps:
+\begin{itemize}
+\item it determines the most likely pose, given the actual measurements and the previously build best map:
+\begin{equation}
+\hat x_t = \mathop{argmax}_{x_t}(p(x_t|z_t, \hat x_{t-1}, m_{t-1}, u_t))
+\nonumber
+\end{equation}
+\item it computes the next step map given the previously built one, the corrected pose and the range reading:
+\begin{equation}
+p(m_t|m_{t-1}, \hat x_t, \hat z_t)
+\nonumber
+\end{equation}
+\end{itemize}
+In the following we present two simple approaches for performing these two steps.
+
+\section{Frequancy Based Occupancy grids}
+An occupancy grid is a discrete world representation. It describes the world as a matrix, whose cells represents the probability of being occupied. The cells are considered independent.
+Here we present a simple algorithm for updating an occupancy grid, based on a frequentist approach.
+
+For each cell of the map $m^{x,y}$ we keep two numbers: the number of times that cell has been visited $v^{x,y}$, and the number of times that cell has been found occupied $b^{x,y}$.
+
+Let $m_{t-1}$ be the map at the previous time step, $x_t$ the robot pose at time $t$ and $z_t=(z^1_t,\cdots,z^n_t)$ the reading.
+We first consider the range reading translated according to the current robot pose
+\begin{equation}
+\hat z_t=(\hat z^1_t,\cdots, \hat z^n_t)=\hat x_t \oplus z_t
+\end{equation}
+Each beam $z^i_t$ can be described with its endpoint $\hat p^i_t$.
+The cells in the map spanned by such a beam lies on the segment $(\hat x_t, \hat p^i_t)$. All the cells wich are before th endpoint are detected as free, while the endpoint is occupied.
+
+The we can incrementally update the cells of the map for each beam, in the following way:
+\begin{equation}
+m^{x,y}_t=(b^{x,y}_t,v^{x,y}_t)=
+\left\{
+\begin{array}{cc}
+(b^{x,y}_t+1,v^{x,y}_t+1) & \mathrm{if\;occupied}\\
+(b^{x,y}_t,v^{x,y}_t+1) & \mathrm{if\;free}
+\end{array}
+\right.
+\end{equation}
+The probability that a cell is pccupied is
+\begin{equation}
+p(m^{x,y}_t)=\frac{b^{x,y}_t}{v^{x,y}_t}
+\end{equation}
+
+\newpage
+\section{A simple gradient descent scan matcher}
+Here we describe the simple scamnmatcher you find in this software bundle.
+The basic principle of this algorithm is to perform a gradinent descent search,
+on a score function $s(x,z,m)$ of the pose, th reading and the map.
+The overall algorithm works as follows:
+\begin{itemize}
+\item $bestPose=x_\mathrm{init}$
+\item $bestScore=s(bestPose,z,m)$
+\item $searchStep=initialSearchStep$
+\item $iterations=0$
+\item while (!$iterations<maxIterations$)
+	\begin{itemize}
+	\item $maxMoveScore=bestScore$
+	\item $bestMovePose=bestPose$
+	\item for $move$ in ($Backward, Forward, Left, Right, RotateLeft, RotatrRight$)
+		\begin{itemize}
+		\item  $testPose=computePose(bestPose, move)$
+		\item  $score=s(testPose,z,m)$
+		\item if ($maxMoveScore<score$)
+			\begin{itemize}
+			\item $maxMoveScore=score$
+			\item $bestMovePose=testPose$
+			\end{itemize}
+		\end{itemize}
+	\item if ($bestScore<maxMoveScore$)
+		\begin{itemize}
+		\item $bestScore<maxMoveScore$
+		\item $bestPose=bestMovePose$
+		\end{itemize}
+	\item else 
+		\begin{itemize}
+		\item $searchStep=searchStep/2$
+		\item $iterations++$
+		\end{itemize}
+	\end{itemize}
+\end{itemize}
+
+Here a critical issue is how to compute the score function.
+A simple approach is to consider a score function as  the sum of the score of the single beams score.
+\begin{equation}
+s(x,z,m)=\sum_i s(x,z^i,m)
+\nonumber
+\end{equation}
+Our choice is to use a simple endpoint based model. Given a pose $x$ and a reading we consider individually the single beams $z^i$. 
+\begin{itemize}
+\item We compute the cell of the map in which the beam endpoint falls. This can be done by translating the endpoint according to $x$ as  $\hat z^i= x \oplus z^i$
+\item We compute the cell of the map in which th endpoint falls.
+\item We found the busy cell $\hat m^{x,y}$ in the map which is closest to $\hat z^i$.
+\item We compute the score as a function which decreases with the increase of the distance among $\hat z^i$ and $(x,y)^T$. The squared distance $d^2$ can be computed as $d^2=(\hat z^i- (x,y)^T))^T\cdot(\hat z^i- (x,y)^T))$
+\begin{equation}
+s(x,z^i,m) = e^{d^2/\sigma}
+\nonumber
+\end{equation}
+\end{itemize}
+As an additional optimization for each map cell $m^{x,y}$ we can consider as its center the center of mass of the points falling in that cell.
+\end{document}
