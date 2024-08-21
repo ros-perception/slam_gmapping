@@ -193,6 +193,8 @@ void SlamGMapping::init()
     map_frame_ = "map";
   if(!private_nh_.getParam("odom_frame", odom_frame_))
     odom_frame_ = "odom";
+  if(!private_nh_.getParam("inverse_transform", inverse_transform_))
+    inverse_transform_ = false;
 
   private_nh_.param("transform_publish_period", transform_publish_period_, 0.05);
 
@@ -799,6 +801,13 @@ void SlamGMapping::publishTransform()
 {
   map_to_odom_mutex_.lock();
   ros::Time tf_expiration = ros::Time::now() + ros::Duration(tf_delay_);
-  tfB_->sendTransform( tf::StampedTransform (map_to_odom_, tf_expiration, map_frame_, odom_frame_));
+
+  tf::StampedTransform tf_send;
+  if (inverse_transform_)
+    tf_send = tf::StampedTransform (map_to_odom_.inverse(), tf_expiration, odom_frame_, map_frame_);
+  else
+    tf_send = tf::StampedTransform (map_to_odom_, tf_expiration, map_frame_, odom_frame_);
+
+  tfB_->sendTransform(tf_send);
   map_to_odom_mutex_.unlock();
 }
