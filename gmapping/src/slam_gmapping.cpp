@@ -127,6 +127,7 @@ Initial map dimensions and resolution:
 #include "ros/ros.h"
 #include "ros/console.h"
 #include "nav_msgs/MapMetaData.h"
+#include "geometry_msgs/PoseStamped.h"
 
 #include "gmapping/sensor/sensor_range/rangesensor.h"
 #include "gmapping/sensor/sensor_odometry/odometrysensor.h"
@@ -271,6 +272,7 @@ void SlamGMapping::startLiveSlam()
   entropy_publisher_ = private_nh_.advertise<std_msgs::Float64>("entropy", 1, true);
   sst_ = node_.advertise<nav_msgs::OccupancyGrid>("map", 1, true);
   sstm_ = node_.advertise<nav_msgs::MapMetaData>("map_metadata", 1, true);
+  sstp_ = node_.advertise<geometry_msgs::PoseStamped>("slam_out_pose", 1, true);
   ss_ = node_.advertiseService("dynamic_map", &SlamGMapping::mapCallback, this);
   scan_filter_sub_ = new message_filters::Subscriber<sensor_msgs::LaserScan>(node_, "scan", 5);
   scan_filter_ = new tf::MessageFilter<sensor_msgs::LaserScan>(*scan_filter_sub_, tf_, odom_frame_, 5);
@@ -286,6 +288,7 @@ void SlamGMapping::startReplay(const std::string & bag_fname, std::string scan_t
   entropy_publisher_ = private_nh_.advertise<std_msgs::Float64>("entropy", 1, true);
   sst_ = node_.advertise<nav_msgs::OccupancyGrid>("map", 1, true);
   sstm_ = node_.advertise<nav_msgs::MapMetaData>("map_metadata", 1, true);
+  sstp_ = node_.advertise<geometry_msgs::PoseStamped>("slam_out_pose", 1, true);
   ss_ = node_.advertiseService("dynamic_map", &SlamGMapping::mapCallback, this);
   
   rosbag::Bag bag;
@@ -624,6 +627,7 @@ SlamGMapping::laserCallback(const sensor_msgs::LaserScan::ConstPtr& scan)
   }
 
   GMapping::OrientedPoint odom_pose;
+  publishPose(gsp_->getParticles()[gsp_->getBestParticleIndex()].pose);
 
   if(addScan(*scan, odom_pose))
   {
@@ -802,3 +806,23 @@ void SlamGMapping::publishTransform()
   tfB_->sendTransform( tf::StampedTransform (map_to_odom_, tf_expiration, map_frame_, odom_frame_));
   map_to_odom_mutex_.unlock();
 }
+
+void SlamGMapping::publishPose(const GMapping::OrientedPoint &mpose)
+{  
+  // set the best pose parameters
+  geometry_msgs::PoseStamped best_pose;
+  best_pose.header.stamp = ros::Time::now();
+  best_pose.header.frame_id = "map";
+  
+  // set the xy coordinates
+  best_pose.pose.position.x = mpose.x;
+  best_pose.pose.position.y = mpose.y;
+
+  // set the orientation
+  best_pose.pose.orientation.w = cos(mpose.theta*0.5f);
+  best_pose.pose.orientation.z = sin(mpose.theta*0.5f);
+
+  sstp_.publish(best_pose);
+
+}
+
